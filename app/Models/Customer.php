@@ -18,9 +18,8 @@ class Customer extends Model
         return $this->belongsTo(User::class);
     }
 
-     public function rutes()
+    public function rutes()
     {
         return $this->hasMany(Rute::class);
     }
-
 }
