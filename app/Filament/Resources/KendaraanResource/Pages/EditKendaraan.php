@@ -16,4 +16,9 @@ class EditKendaraan extends EditRecord
             Actions\DeleteAction::make(),
         ];
     }
+
+    protected function getRedirectUrl(): string
+    {
+        return KendaraanResource::getUrl('index');
+    }
 }

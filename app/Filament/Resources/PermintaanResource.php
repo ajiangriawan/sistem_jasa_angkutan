@@ -170,8 +170,6 @@ class PermintaanResource extends Resource
                     ->searchable()
                     ->sortable(),
 
-                    
-
                 Tables\Columns\BadgeColumn::make('status_verifikasi')
                     ->label('Status')
                     ->formatStateUsing(function (string $state): string {
@@ -188,8 +186,6 @@ class PermintaanResource extends Resource
             ])
             ->filters([])
             ->actions([
-                /*Tables\Actions\ViewAction::make()
-                    ->label('Permintaan'),*/
                 Tables\Actions\EditAction::make()
                     ->visible(fn($record) => !in_array($record->status_verifikasi, ['disetujui', 'ditolak']) || auth()->user()->role === 'admin'),
 
@@ -238,9 +234,10 @@ class PermintaanResource extends Resource
                         ]);
                     }),
             ])
+            ->recordUrl(fn ($record) => static::getUrl('view', ['record' => $record]))
             ->bulkActions([
                 Tables\Actions\DeleteBulkAction::make()
-                    ->visible(fn () => auth()->user()->role === 'admin'),
+                    ->visible(fn () => auth()->user()/*->role === 'admin'*/),
             ]);
     }
 

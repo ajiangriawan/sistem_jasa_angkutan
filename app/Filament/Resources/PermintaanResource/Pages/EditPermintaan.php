@@ -29,4 +29,9 @@ class EditPermintaan extends EditRecord
             abort(403, 'Data ini sudah disetujui atau ditolak dan tidak bisa diubah.');
         }
     }
+
+    protected function getRedirectUrl(): string
+    {
+        return PermintaanResource::getUrl('index');
+    }
 }

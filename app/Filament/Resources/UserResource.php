@@ -54,6 +54,7 @@ class UserResource extends Resource
                 ->password()
                 ->required(fn($livewire) => $livewire instanceof Pages\CreateUser)
                 ->dehydrateStateUsing(fn($state) => filled($state) ? bcrypt($state) : null)
+                ->dehydrated(fn($state) => filled($state)) // ⬅ hanya update jika diisi
                 ->maxLength(255)
                 ->autocomplete('new-password'),
 
@@ -62,16 +63,17 @@ class UserResource extends Resource
                 ->label('Peran / Role')
                 ->options([
                     'admin' => 'Admin',
-                    'customer' => 'Customer',
                     'operational' => 'Operasional',
-                    'driver' => 'Sopir'
+                    'driver' => 'Sopir',
+                    'customer' => 'Customer',
+
                 ])
                 ->required()
                 ->searchable()
                 ->reactive(),
 
             // Field Nama Perusahaan, muncul jika role adalah 'customer'
-            Forms\Components\TextInput::make('nama_perusahaan')
+            Forms\Components\TextInput::make('customer.nama_perusahaan')
                 ->label('Nama Perusahaan')
                 ->visible(fn(Get $get) => $get('role') === 'customer')
                 ->requiredIf('role', 'customer')
@@ -80,7 +82,7 @@ class UserResource extends Resource
                 ->default(fn($get) => optional($get('customer'))->nama_perusahaan),
 
             // Field Alamat, muncul jika role adalah 'customer'
-            Forms\Components\Textarea::make('alamat')
+            Forms\Components\Textarea::make('customer.alamat')
                 ->label('Alamat')
                 ->visible(fn(Get $get) => $get('role') === 'customer')
                 ->requiredIf('role', 'customer')
@@ -88,13 +90,13 @@ class UserResource extends Resource
                 // Isi nilai jika sudah ada (misalnya, dengan menggunakan relasi atau nilai dari customer)
                 ->default(fn($get) => optional($get('customer'))->alamat),
 
-            Forms\Components\TextInput::make('no_sim')
+            Forms\Components\TextInput::make('sopir.no_sim')
                 ->label('Nomor SIM')
                 ->visible(fn(Get $get) => $get('role') === 'driver')
                 ->requiredIf('role', 'driver')
                 ->maxLength(20),
 
-            Forms\Components\TextInput::make('telepon')
+            Forms\Components\TextInput::make('sopir.telepon')
                 ->label('Nomor Telepon')
                 ->visible(fn(Get $get) => $get('role') === 'driver')
                 ->requiredIf('role', 'driver')
@@ -129,10 +131,10 @@ class UserResource extends Resource
             ->actions([
                 Tables\Actions\EditAction::make(),
             ])
+            ->recordUrl(fn($record) => static::getUrl('view', ['record' => $record]))
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
+                Tables\Actions\DeleteBulkAction::make()
+                    ->visible(fn() => auth()->user()->role === 'admin'),
             ]);
     }
 
@@ -147,6 +149,7 @@ class UserResource extends Resource
             'index' => Pages\ListUsers::route('/'),
             'create' => Pages\CreateUser::route('/create'),
             'edit' => Pages\EditUser::route('/{record}/edit'),
+            'view' => Pages\ViewUser::route('/{record}'),
         ];
     }
 }

@@ -26,8 +26,7 @@ class CreatePermintaan extends CreateRecord
                 ->actions([
                     Action::make('Lihat')
                         ->url(PermintaanResource::getUrl(name: 'view', parameters: ['record' => $permintaan]))
-                        ->button()
-                        ->openUrlInNewTab(),
+                        ->button(),
                 ])
                 ->sendToDatabase($admin);
         }

@@ -65,7 +65,16 @@ class RuteResource extends Resource
                 Tables\Columns\TextColumn::make('jarak_km')->label('Jarak (km)')->sortable(),
                 Tables\Columns\TextColumn::make('harga')->money('IDR', true),
                 Tables\Columns\TextColumn::make('uang_jalan')->money('IDR', true),
-                Tables\Columns\TextColumn::make('bonus')->money('IDR', true),
+            ])
+            ->filters([])
+            ->actions([
+                Tables\Actions\EditAction::make()
+                    ->visible(fn($record) => !in_array($record->status_verifikasi, ['disetujui', 'ditolak']) || auth()->user()->role === 'admin'),
+            ])
+            ->recordUrl(fn ($record) => static::getUrl('view', ['record' => $record]))
+            ->bulkActions([
+                Tables\Actions\DeleteBulkAction::make()
+                    ->visible(fn () => auth()->user()->role === 'admin'),
             ]);
     }
 
@@ -76,6 +85,7 @@ class RuteResource extends Resource
             'index' => Pages\ListRutes::route('/'),
             'create' => Pages\CreateRute::route('/create'),
             'edit' => Pages\EditRute::route('/{record}/edit'),
+            'view' => Pages\ViewRute::route('/{record}'),
         ];
     }
 

@@ -17,6 +17,7 @@
         "vite": "^5.0.0"
     },
     "dependencies": {
-        "@tailwindcss/vite": "^4.1.7"
+        "@tailwindcss/vite": "^4.1.7",
+        "taos": "^1.0.5"
     }
 }

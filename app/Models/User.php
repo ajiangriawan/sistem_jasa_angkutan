@@ -46,7 +46,7 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
-     public function notifications(): \Illuminate\Database\Eloquent\Relations\MorphMany
+    public function notifications(): \Illuminate\Database\Eloquent\Relations\MorphMany
     {
         return $this->morphMany(DatabaseNotification::class, 'notifiable')->latest();
     }
@@ -54,5 +54,9 @@ class User extends Authenticatable
     public function customer()
     {
         return $this->hasOne(Customer::class);
+    }
+    public function sopir()
+    {
+        return $this->hasOne(Sopir::class);
     }
 }

@@ -13,47 +13,32 @@ class CreateUser extends CreateRecord
 
     protected function handleRecordCreation(array $data): \Illuminate\Database\Eloquent\Model
     {
-        $namaPerusahaan = $data['nama_perusahaan'] ?? null;
-        $alamat = $data['alamat'] ?? null;
-        $no_sim = $data['no_sim'] ?? null;
-        $telepon = $data['telepon'] ?? null;
+        // Ambil data nested dari form
+        $customerData = $data['customer'] ?? [];
+        $sopirData = $data['sopir'] ?? [];
 
-        // Hapus dari array sebelum insert user
-        unset($data['nama_perusahaan'], $data['alamat']);
+        // Hapus nested data dari array utama agar tidak error saat create user
+        unset($data['customer'], $data['sopir']);
 
-        // Membuat pengguna
+        // Buat user
         $user = static::getModel()::create($data);
 
-        // Memeriksa apakah role adalah customer dan jika data customer ada
-        if ($user->role === 'customer' && $namaPerusahaan && $alamat) {
-            try {
-                // Menyimpan data customer jika role adalah customer
-                Customer::create([
-                    'user_id' => $user->id,
-                    'nama_perusahaan' => $namaPerusahaan,
-                    'alamat' => $alamat,
-                ]);
-            } catch (\Exception $e) {
-                // Penanganan error jika terjadi kegagalan saat menyimpan customer
-                session()->flash('error', 'Gagal membuat data customer');
-                throw $e;
-            }
+        // Jika role customer dan data tersedia, buat relasi customer
+        if ($user->role === 'customer' && !empty($customerData)) {
+            Customer::create([
+                'user_id' => $user->id,
+                'nama_perusahaan' => $customerData['nama_perusahaan'] ?? '',
+                'alamat' => $customerData['alamat'] ?? '',
+            ]);
         }
 
-        // Memeriksa apakah role adalah sopir dan jika data sopir ada
-        if ($user->role === 'driver' && $no_sim && $telepon) {
-            try {
-                // Menyimpan data sopir jika role adalah sopir
-                Sopir::create([
-                    'user_id' => $user->id,
-                    'no_sim' => $no_sim,
-                    'telepon' => $telepon,
-                ]);
-            } catch (\Exception $e) {
-                // Penanganan error jika terjadi kegagalan saat menyimpan sopir
-                session()->flash('error', 'Gagal membuat data sopir');
-                throw $e;
-            }
+        // Jika role driver dan data tersedia, buat relasi sopir
+        if ($user->role === 'driver' && !empty($sopirData)) {
+            Sopir::create([
+                'user_id' => $user->id,
+                'no_sim' => $sopirData['no_sim'] ?? '',
+                'telepon' => $sopirData['telepon'] ?? '',
+            ]);
         }
 
         return $user;

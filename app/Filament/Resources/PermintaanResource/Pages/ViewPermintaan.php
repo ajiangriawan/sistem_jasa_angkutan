@@ -9,5 +9,4 @@ class ViewPermintaan extends ViewRecord
 {
     protected static string $resource = PermintaanResource::class;
 
-    
 }
