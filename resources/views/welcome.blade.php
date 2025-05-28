@@ -3,448 +3,119 @@
 
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PT Balink Sakti Synergy - Jasa Angkutan Batubara</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/alpinejs" defer></script>
-    <style>
-        /* Base colors and typography */
-        body {
-            background: linear-gradient(135deg, #222222 0%, #333333 100%);
-            color: #F9FAFB;
-            font-family: 'Inter', sans-serif;
-            overflow-x: hidden;
-            position: relative;
-            opacity: 0;
-            animation: fadeInPage 1.2s ease forwards;
-        }
+    <link href="https://cdn.jsdelivr.net/npm/flowbite@3.1.2/dist/flowbite.min.css" rel="stylesheet" />
+    <script>
+        document.documentElement.classList.add('js')
+    </script>
 
-        .full {
-            width: 100%;
-            text-align: center;
-        }
-
-        @keyframes fadeInPage {
-            to {
-                opacity: 1;
-            }
-        }
-
-        a,
-        button {
-            font-family: 'Inter', sans-serif;
-        }
-
-        /* Glow and fade slide animations */
-        @keyframes fadeSlideUp {
-            0% {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-
-            100% {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .animate-fadeSlideUp {
-            animation: fadeSlideUp 1s ease forwards;
-        }
-
-        .stagger-delay-1 {
-            animation-delay: 0.2s;
-        }
-
-        .stagger-delay-2 {
-            animation-delay: 0.4s;
-        }
-
-        .stagger-delay-3 {
-            animation-delay: 0.6s;
-        }
-
-        .stagger-delay-4 {
-            animation-delay: 0.8s;
-        }
-
-        /* Glow text - subtle white with faint dark blue shadow */
-        .glow-text {
-            color: #F9FAFB;
-            text-shadow:
-                0 0 8px #1e3a8a,
-                0 0 12px #1e40af,
-                0 0 20px #1e40af;
-        }
-
-        .glow-zoom {
-            animation: glowZoom 1.2s ease forwards;
-            opacity: 0;
-            transform: scale(0.9);
-        }
-
-        @keyframes glowZoom {
-            0% {
-                opacity: 0;
-                transform: scale(0.9);
-                text-shadow: none;
-            }
-
-            50% {
-                opacity: 1;
-                transform: scale(1.05);
-                text-shadow:
-                    0 0 14px #1e40af,
-                    0 0 24px #1e40af,
-                    0 0 30px #1e3a8a;
-            }
-
-            100% {
-                opacity: 1;
-                transform: scale(1);
-                text-shadow:
-                    0 0 9px #1e3a8a,
-                    0 0 18px #1e40af;
-            }
-        }
-
-        /* Button styling with strong bright orange and deep blue accent */
-        .btn-primary {
-            background-color: #FF5700;
-            color: #F9FAFB;
-            font-weight: 700;
-            padding: 0.75rem 2rem;
-            border-radius: 0.75rem;
-            box-shadow: 0 8px 20px rgba(255, 87, 0, 0.5);
-            transition: all 0.3s ease;
-            cursor: pointer;
-            border: 2px solid transparent;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn-primary:hover {
-            background-color: #e04e00;
-            box-shadow: 0 15px 30px rgba(224, 78, 0, 0.8);
-            transform: translateY(-3px);
-            border-color: #1e3a8a;
-        }
-
-        /* Button shimmer effect */
-        .btn-shimmer::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -75%;
-            width: 50%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-            transform: skewX(-20deg);
-            transition: left 1.5s linear;
-            z-index: 1;
-            pointer-events: none;
-        }
-
-        .btn-shimmer:hover::before {
-            animation: shimmer 1.5s linear infinite;
-        }
-
-        @keyframes shimmer {
-            0% {
-                left: -75%;
-            }
-
-            100% {
-                left: 125%;
-            }
-        }
-
-        /* Floating sparks in calm blueish tone for hero */
-        .spark {
-            position: absolute;
-            border-radius: 50%;
-            background: rgba(59, 130, 246, 0.4);
-            opacity: 0.7;
-            animation: floatUp 5s ease-in-out infinite alternate;
-            filter: drop-shadow(0 0 6px rgba(29, 78, 216, 0.7));
-            z-index: 2;
-        }
-
-        .spark1 {
-            width: 14px;
-            height: 14px;
-            left: 12%;
-            bottom: 42%;
-            animation-delay: 0s;
-        }
-
-        .spark2 {
-            width: 11px;
-            height: 11px;
-            left: 28%;
-            bottom: 38%;
-            animation-delay: 1.5s;
-            animation-duration: 6s;
-        }
-
-        .spark3 {
-            width: 9px;
-            height: 9px;
-            left: 42%;
-            bottom: 47%;
-            animation-delay: 0.8s;
-            animation-duration: 5.5s;
-        }
-
-        .spark4 {
-            width: 7px;
-            height: 7px;
-            left: 65%;
-            bottom: 40%;
-            animation-delay: 2s;
-            animation-duration: 5.2s;
-        }
-
-        @keyframes floatUp {
-            0% {
-                transform: translateY(0) scale(1);
-                opacity: 0.7;
-            }
-
-            100% {
-                transform: translateY(-20px) scale(1.2);
-                opacity: 0.3;
-            }
-        }
-
-        /* Scroll trucks */
-        .truck {
-            position: fixed;
-            bottom: 5.5rem;
-            width: 120px;
-            /* Ukuran default untuk truk */
-            pointer-events: none;
-            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.7));
-            z-index: 9999;
-            transition: transform 0.1s linear;
-            opacity: 0;
-            animation: truckFadeIn 1.5s ease forwards;
-        }
-
-        @keyframes truckFadeIn {
-            to {
-                opacity: 1;
-            }
-        }
-
-        /* Kita tidak perlu lagi mengatur 'left' atau 'right' di CSS untuk truk,
-           karena akan diatur sepenuhnya oleh JavaScript */
-
-        /* Sections background */
-        section.services,
-        section.about,
-        section.contact {
-            background-color: rgba(25, 25, 25, 0.85);
-            border-radius: 1rem;
-            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.6);
-            backdrop-filter: saturate(180%) blur(10px);
-            color: #e5e7eb;
-            padding-left: 1rem;
-            padding-right: 1rem;
-        }
-
-        /* Header and nav */
-        header {
-            background: transparent;
-            position: sticky;
-            top: 0;
-            z-index: 50;
-            backdrop-filter: saturate(180%) blur(12px);
-            background-color: rgba(25, 25, 25, 0.9);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
-            padding-left: 1rem;
-            padding-right: 1rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        nav ul {
-            display: flex;
-            gap: 1.5rem;
-            list-style: none;
-            margin: 0;
-            padding: 0;
-        }
-
-        nav ul li a {
-            transition: color 0.3s ease;
-            color: #d1d5db;
-            font-weight: 600;
-            text-decoration: none;
-        }
-
-        nav ul li a:hover {
-            color: #ff5700;
-        }
-
-        /* Form inputs */
-        input,
-        textarea {
-            border-radius: 0.5rem;
-            border: 1px solid #444444;
-            padding: 0.75rem 1rem;
-            font-size: 1rem;
-            background-color: #222222;
-            color: #f9fafb;
-            box-shadow: inset 0 0 6px rgba(255, 87, 0, 0.4);
-            transition: box-shadow 0.3s ease, border-color 0.3s ease;
-            width: 100%;
-        }
-
-        input::placeholder,
-        textarea::placeholder {
-            color: #d1d5db;
-            opacity: 0.7;
-        }
-
-        input:focus,
-        textarea:focus {
-            outline: none;
-            box-shadow: 0 0 12px #ff5700;
-            border-color: #ff5700;
-            background-color: #2c2c2c;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            header {
-                flex-wrap: wrap;
-                justify-content: center;
-                gap: 1rem;
-            }
-
-            nav ul {
-                flex-direction: column;
-                gap: 1rem;
-                width: 100%;
-                align-items: center;
-            }
-
-            nav ul li a {
-                font-size: 1.1rem;
-                font-weight: 700;
-            }
-
-            .tengah {
-                text-align: center;
-            }
-
-            section.services,
-            section.about,
-            section.contact {
-                padding-left: 0.5rem;
-                padding-right: 0.5rem;
-            }
-
-            main>section:first-child {
-                flex-direction: column !important;
-                gap: 1.5rem;
-            }
-
-            main>section:first-child>div {
-                max-width: 100% !important;
-            }
-
-            /* Atur lebar truk agar responsif */
-            .truck {
-                width: 90px !important;
-                bottom: 7rem !important;
-            }
-        }
-    </style>
 </head>
 
 <body>
-    <header class="container mx-auto px-6 py-4">
-        <h1 class="text-2xl font-bold tracking-wide cursor-default select-none glow-text tengah">PT Balink Sakti Synergy</h1>
-        <div x-data="{ open: false }" class="md:hidden full">
-            <button @click="open = !open" class="focus:outline-none">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-            </button>
-            <nav class="flex flex-col space-y-2 text-sm" x-show="open" @click.outside="open = false">
-                <a href="#beranda" class="hover:text-orange-400">Beranda</a>
-                <a href="#services" class="hover:text-orange-400">Layanan</a>
-                <a href="#about" class="hover:text-orange-400">Tentang</a>
-                <a href="#contact" class="hover:text-orange-400">Kontak</a>
-                <a href="/dashboard" class="hover:text-orange-400">Dashboard</a>
-            </nav>
+    <nav class="bg-white dark:bg-gray-800 fixed w-full z-20 top-0 start-0 border-b border-gray-200 dark:border-gray-600">
+        <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
+            <a href="/" class="flex items-center space-x-3 rtl:space-x-reverse">
+                <img src="{{ asset('images/logo.png') }}" class="h-8" alt="Bss Logo">
+                <span class="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">PT BSS</span>
+            </a>
+            <div class="flex md:order-2 space-x-3 md:space-x-0 rtl:space-x-reverse">
+                <a href="/dashboard" type="button" class="text-white bg-orange-700 hover:bg-orange-800 focus:ring-4 focus:outline-none focus:ring-orange-300 font-medium rounded-lg text-sm px-4 py-2 text-center dark:bg-orange-600 dark:hover:bg-orange-700 dark:focus:ring-orange-800">
+                    Dashboard
+                </a>
+                <button data-collapse-toggle="navbar-sticky" type="button" class="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-500 rounded-lg md:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600" aria-controls="navbar-sticky" aria-expanded="false">
+                    <span class="sr-only">Open main menu</span>
+                    <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 17 14">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 1h15M1 7h15M1 13h15" />
+                    </svg>
+                </button>
+            </div>
+            <div class="items-center justify-between hidden w-full md:flex md:w-auto md:order-1" id="navbar-sticky">
+                <ul class="flex flex-col p-4 md:p-0 mt-4 font-medium border border-gray-100 rounded-lg bg-gray-50 md:space-x-8 rtl:space-x-reverse md:flex-row md:mt-0 md:border-0 md:bg-white dark:bg-gray-800 md:dark:bg-gray-800 dark:border-gray-700">
+                    <li>
+                        <a href="#beranda" class="block py-2 px-3 text-white bg-orange-700 rounded-sm md:bg-transparent md:text-orange-700 md:p-0 md:dark:text-orange-500" aria-current="page">
+                            Beranda
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#layanan" class="block py-2 px-3 text-gray-900 rounded-sm hover:bg-gray-100 md:hover:bg-transparent md:hover:text-orange-700 md:p-0 md:dark:hover:text-orange-500 dark:text-white dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700">
+                            Layanan
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#tentang" class="block py-2 px-3 text-gray-900 rounded-sm hover:bg-gray-100 md:hover:bg-transparent md:hover:text-orange-700 md:p-0 md:dark:hover:text-orange-500 dark:text-white dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700">
+                            Tentang
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#kontak" class="block py-2 px-3 text-gray-900 rounded-sm hover:bg-gray-100 md:hover:bg-transparent md:hover:text-orange-700 md:p-0 md:dark:hover:text-orange-500 dark:text-white dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700">
+                            Kontak
+                        </a>
+                    </li>
+                </ul>
+            </div>
         </div>
-        <nav class="hidden md:flex">
-            <ul>
-                <li><a href="#services" class="hover:text-orange-500">Layanan</a></li>
-                <li><a href="#about" class="hover:text-orange-500">Tentang</a></li>
-                <li><a href="#contact" class="hover:text-orange-500">Kontak</a></li>
-                <li><a href="/dashboard" class="hover:text-orange-500">Dashboard</a></li>
-            </ul>
-        </nav>
-    </header>
+    </nav>
 
-    <main class="container mx-auto px-6 mt-12 mb-8 max-w-7xl relative z-10">
-        <section id="#beranda" class="flex flex-col md:flex-row items-center justify-between min-h-[70vh] gap-12">
-            <div class="max-w-lg animate-fadeSlideUp glow-zoom tengah" style="animation-delay: 0.3s; animation-fill-mode: forwards;">
-                <h2 class="text-5xl font-extrabold mb-6 glow-text leading-tight">Sistem Informasi <br />Jasa Angkutan Batubara</h2>
-                <p class="text-lg mb-8 max-w-md leading-relaxed text-gray-100">
-                    Solusi <span class="font-extrabold underline decoration-orange-500/80">terpercaya</span> dan profesional untuk pengangkutan batubara dengan armada khusus dari PT Balink Sakti Synergy.
-                </p>
-                <a href="#contact" class="btn-primary btn-shimmer">Hubungi Kami</a>
+    <section id="beranda" class="h-screen bg-cover bg-center bg-no-repeat bg-[url('{{ asset('images/hero1.png') }}')] bg-gray-700 bg-blend-multiply mt-16">
+        <div class="px-4 mx-auto max-w-screen-xl text-center py-24 lg:py-56 delay-[200ms] duration-[400ms] taos:translate-y-[-100%] taos:opacity-0" data-taos-offset="500"">
+            <h1 class=" mb-4 text-4xl font-extrabold tracking-tight leading-none text-white md:text-5xl lg:text-6xl">PT Balink Sakti Synergy</h1>
+            <p class="mb-8 text-lg font-normal text-gray-300 lg:text-xl sm:px-16 lg:px-48">Sistem Informasi Jasa Angkutan Batu Bara solusi terpercacya dan profesional untuk pengangkutan batubara dengan armada khusus dari PT Balink Sakti Synergy. </p>
+            <div class="flex flex-col space-y-4 sm:flex-row sm:justify-center sm:space-y-0">
+                <a href="https://wa.me/+6287813233775" class="inline-flex justify-center items-center py-3 px-5 text-base font-medium text-center text-white rounded-lg bg-orange-700 hover:bg-orange-800 focus:ring-4 focus:ring-orange-300 dark:focus:ring-orange-900">
+                    Hubungi Kami
+                    <svg class="w-3.5 h-3.5 ms-2 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 5h12m0 0L9 1m4 4L9 9" />
+                    </svg>
+                </a>
+                <a href="#" class="inline-flex justify-center hover:text-gray-900 items-center py-3 px-5 sm:ms-4 text-base font-medium text-center text-white rounded-lg border border-white hover:bg-gray-100 focus:ring-4 focus:ring-gray-400">
+                    Layanan
+                </a>
             </div>
-            <div class="relative max-w-lg w-full">
-                <img src="{{ asset('images/hero.png') }}" alt="Coal Transportation Truck" class="rounded-xl shadow-2xl max-w-full" />
-                <div class="spark spark1"></div>
-                <div class="spark spark2"></div>
-                <div class="spark spark3"></div>
-                <div class="spark spark4"></div>
-            </div>
-        </section>
-
-        <section id="services" class="services mt-24 px-8 py-14 max-w-6xl mx-auto animate-fadeSlideUp">
+        </div>
+    </section>
+    <main class="container mx-auto px-6 mb-8 max-w-7xl relative z-10">
+        <section id="layanan" class="mt-2 px-8 py-14 max-w-6xl mx-auto">
             <h3 class="text-3xl font-bold mb-10 text-center glow-text">Layanan Kami</h3>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-12 text-gray-300">
-                <div class="p-6 rounded-xl shadow-lg bg-gradient-to-tr from-gray-900 via-gray-800 to-gray-900 hover:from-orange-600 hover:to-orange-500 cursor-pointer transition">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-14 h-14 mb-5 text-orange-400 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 17l4-4 4 4m0-8l-4 4-4-4" />
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-12 text-black">
+                <div class="p-6 rounded-xl shadow-lg bg-orange-300 hover:bg-white hover:border-4 hover:border-orange-300 cursor-pointer transition delay-[200ms] duration-[600ms] taos:translate-y-[-100%] taos:opacity-0" data-taos-offset="500">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="black" class="w-14 h-14 mb-5 text-orange-400 mx-auto">
+                        <path d="M3.375 4.5C2.339 4.5 1.5 5.34 1.5 6.375V13.5h12V6.375c0-1.036-.84-1.875-1.875-1.875h-8.25ZM13.5 15h-12v2.625c0 1.035.84 1.875 1.875 1.875h.375a3 3 0 1 1 6 0h3a.75.75 0 0 0 .75-.75V15Z" />
+                        <path d="M8.25 19.5a1.5 1.5 0 1 0-3 0 1.5 1.5 0 0 0 3 0ZM15.75 6.75a.75.75 0 0 0-.75.75v11.25c0 .087.015.17.042.248a3 3 0 0 1 5.958.464c.853-.175 1.522-.935 1.464-1.883a18.659 18.659 0 0 0-3.732-10.104 1.837 1.837 0 0 0-1.47-.725H15.75Z" />
+                        <path d="M19.5 19.5a1.5 1.5 0 1 0-3 0 1.5 1.5 0 0 0 3 0Z" />
                     </svg>
-                    <h4 class="text-xl font-semibold mb-2 text-center">Jasa Angkutan Batubara</h4>
-                    <p class="text-center">Pengangkutan batubara dengan armada truk khusus dan dukungan logistik profesional.</p>
+                    <h4 class="text-xl font-bold mb-2 text-center">Jasa Angkutan Batubara</h4>
+                    <p class="text-center">
+                        Pengangkutan batubara dengan armada truk khusus dan dukungan logistik profesional.</p>
                 </div>
-                <div class="p-6 rounded-xl shadow-lg bg-gradient-to-tr from-gray-900 via-gray-800 to-gray-900 hover:from-blue-900 hover:to-blue-700 cursor-pointer transition">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-14 h-14 mb-5 text-blue-700 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h1l3 9m4-9h6m-10-4h6m6 0h2l4 14H6" />
+                <div class="p-6 rounded-xl shadow-lg bg-orange-300 hover:bg-white hover:border-4 hover:border-orange-300 cursor-pointer transition delay-[400ms] duration-[600ms] taos:translate-y-[-100%] taos:opacity-0" data-taos-offset="500">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="black" class="w-14 h-14 mb-5 text-orange-400 mx-auto">
+                        <path fill-rule="evenodd" d="M12 5.25c1.213 0 2.415.046 3.605.135a3.256 3.256 0 0 1 3.01 3.01c.044.583.077 1.17.1 1.759L17.03 8.47a.75.75 0 1 0-1.06 1.06l3 3a.75.75 0 0 0 1.06 0l3-3a.75.75 0 0 0-1.06-1.06l-1.752 1.751c-.023-.65-.06-1.296-.108-1.939a4.756 4.756 0 0 0-4.392-4.392 49.422 49.422 0 0 0-7.436 0A4.756 4.756 0 0 0 3.89 8.282c-.017.224-.033.447-.046.672a.75.75 0 1 0 1.497.092c.013-.217.028-.434.044-.651a3.256 3.256 0 0 1 3.01-3.01c1.19-.09 2.392-.135 3.605-.135Zm-6.97 6.22a.75.75 0 0 0-1.06 0l-3 3a.75.75 0 1 0 1.06 1.06l1.752-1.751c.023.65.06 1.296.108 1.939a4.756 4.756 0 0 0 4.392 4.392 49.413 49.413 0 0 0 7.436 0 4.756 4.756 0 0 0 4.392-4.392c.017-.223.032-.447.046-.672a.75.75 0 0 0-1.497-.092c-.013.217-.028.434-.044.651a3.256 3.256 0 0 1-3.01 3.01 47.953 47.953 0 0 1-7.21 0 3.256 3.256 0 0 1-3.01-3.01 47.759 47.759 0 0 1-.1-1.759L6.97 15.53a.75.75 0 0 0 1.06-1.06l-3-3Z" clip-rule="evenodd" />
                     </svg>
-                    <h4 class="text-xl font-semibold mb-2 text-center">Logistik Batubara Terintegrasi</h4>
-                    <p class="text-center">Solusi logistik dari tambang hingga pengiriman dengan koordinasi terbaik.</p>
+
+                    <h4 class="text-xl font-bold mb-2 text-center">Logistik Batubara Terintegrasi</h4>
+                    <p class="text-center">
+                        Solusi logistik dari tambang hingga pengiriman dengan koordinasi terbaik.</p>
                 </div>
-                <div class="p-6 rounded-xl shadow-lg bg-gradient-to-tr from-gray-900 via-gray-800 to-gray-900 hover:from-orange-600 hover:to-orange-500 cursor-pointer transition">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-14 h-14 mb-5 text-orange-400 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-3-3v6" />
+                <div class="p-6 rounded-xl shadow-lg bg-orange-300 hover:bg-white hover:border-4 hover:border-orange-300 cursor-pointer transition delay-[600ms] duration-[600ms] taos:translate-y-[-100%] taos:opacity-0" data-taos-offset="500">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="black" class="w-14 h-14 mb-5 text-orange-400 mx-auto">
+                        <path fill-rule="evenodd" d="M2.25 5.25a3 3 0 0 1 3-3h13.5a3 3 0 0 1 3 3V15a3 3 0 0 1-3 3h-3v.257c0 .597.237 1.17.659 1.591l.621.622a.75.75 0 0 1-.53 1.28h-9a.75.75 0 0 1-.53-1.28l.621-.622a2.25 2.25 0 0 0 .659-1.59V18h-3a3 3 0 0 1-3-3V5.25Zm1.5 0v7.5a1.5 1.5 0 0 0 1.5 1.5h13.5a1.5 1.5 0 0 0 1.5-1.5v-7.5a1.5 1.5 0 0 0-1.5-1.5H5.25a1.5 1.5 0 0 0-1.5 1.5Z" clip-rule="evenodd" />
                     </svg>
-                    <h4 class="text-xl font-semibold mb-2 text-center">Monitoring Pengangkutan</h4>
-                    <p class="text-center">Pantau status pengangkutan batubara secara real-time dengan sistem kami.</p>
+
+                    <h4 class="text-xl font-bold mb-2 text-center">Monitoring Pengangkutan</h4>
+                    <p class="text-center">
+                        Pantau status pengangkutan batubara secara real-time dengan sistem kami.</p>
                 </div>
             </div>
         </section>
-
-        <section id="about" class="about mt-24 px-8 py-14 max-w-4xl mx-auto text-center animate-fadeSlideUp text-gray-300">
-            <h3 class="text-3xl font-bold mb-6 text-white glow-text">Tentang PT Balink Sakti Synergy</h3>
+        <section id="tentang" class="bg-gray-800 rounded-xl mt-2 px-8 py-14 max-w-6xl mx-auto text-white text-center delay-[300ms] duration-[600ms] taos:scale-[0.6] taos:opacity-0" data-taos-offset="400">
+            <h3 class="text-3xl font-bold mb-6  glow-text">Tentang PT Balink Sakti Synergy</h3>
             <p>
                 PT Balink Sakti Synergy adalah perusahaan jasa angkutan batubara dan logistik yang berkomitmen menyediakan layanan profesional dengan armada khusus dan sistem terintegrasi. Kami mengutamakan keamanan, kecepatan, dan kepuasan pelanggan sebagai prioritas utama.
             </p>
         </section>
-
-        <section id="contact" class="contact mt-24 px-8 py-14 max-w-3xl mx-auto bg-gradient-to-tr from-gray-900 via-gray-800 to-gray-900 rounded-xl shadow-lg animate-fadeSlideUp">
+        <section id="kontak" class="bg-gray-800 rounded-xl mt-2 px-8 py-14 max-w-6xl mx-auto text-white text-center delay-[300ms] duration-[600ms] taos:scale-[0.6] taos:opacity-0" data-taos-offset="400">
             <h3 class="text-3xl font-bold mb-8 text-white text-center glow-text">Kontak Kami</h3>
             <div class="text-center text-gray-300">
                 <p class="mb-4">Untuk pertanyaan atau informasi lebih lanjut, silakan hubungi kami melalui:</p>
@@ -456,92 +127,23 @@
                 </p>
             </div>
         </section>
-        <div class="flex flex-row justify-center mt-8">
-            
-            <img id="truck2" class="truck" src="{{ asset('images/truck2.png') }}" alt="Truck 2" />
-            <img class="w-24" src="{{ asset('images/logo.png') }}" alt="Logo" />
 
-        </div>
     </main>
-
-    <footer class="text-center text-gray-400 text-sm py-8 select-none">
-        &copy; 2025 PT Balink Sakti Synergy. All rights reserved.
-        <p>Aji Angri Awan | Muzayyanah</p>
+    <footer class="bg-white shadow-sm dark:bg-gray-800">
+        <div class="w-full max-w-screen-xl mx-auto p-4 md:py-8">
+            <div class="sm:flex sm:items-center sm:justify-center">
+                <a href="/" class="flex items-center mb-4 sm:mb-0 space-x-3 rtl:space-x-reverse">
+                    <img src="{{ asset('images/logo.png') }}" class="h-8" alt="Bss Logo" />
+                    <span class="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">PT Balink Sakti Synergy</span>
+                </a>
+            </div>
+            <hr class="my-6 border-gray-200 sm:mx-auto dark:border-gray-700 lg:my-8" />
+            <span class="block text-sm text-gray-500 sm:text-center dark:text-gray-400">© 2025 <a href="/" class="hover:underline">PT Balink Sakti Synergy</a>. All Rights Reserved.</span>
+        </div>
     </footer>
 
-
-
-    <script>
-        // Scroll-based horizontal truck animations with varied speeds and directions
-        // Scroll-based horizontal truck animations with varied speeds and directions
-        const trucks = [{
-                el: document.getElementById('truck2'),
-                direction: 1, // left to right
-                speedMultiplier: 0.7,
-                startOffset: -100, // Mulai lebih jauh dari kiri (bisa disesuaikan)
-                animationStopPoint: 0.5 // Truk akan mencapai tengah pada 50% scroll
-            },
-        ];
-
-        function updateTrucksOnScroll() {
-            const scrollTop = window.scrollY || window.pageYOffset;
-            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-            // Pastikan docHeight tidak nol untuk menghindari pembagian dengan nol
-            const scrollProgress = docHeight > 0 ? Math.min(scrollTop / docHeight, 1) : 0;
-            const vw = window.innerWidth;
-
-            trucks.forEach(({
-                el,
-                direction,
-                speedMultiplier,
-                startOffset,
-                animationStopPoint
-            }) => {
-                const truckWidth = el.offsetWidth; // Dapatkan lebar truk secara dinamis
-                const centerPosition = (vw / 2) - (truckWidth / 2); // Posisi tengah layar yang akurat
-
-                let currentX; // Posisi X saat ini dari truk
-
-                // Hitung persentase animasi yang telah dicapai relatif terhadap animationStopPoint
-                let animPercentage = Math.min(scrollProgress / animationStopPoint, 1);
-
-                if (direction === 1) { // Truk bergerak dari kiri ke kanan
-                    // Targetnya adalah centerPosition dari startOffset
-                    const targetX = centerPosition;
-                    // Jarak yang harus ditempuh dari startOffset ke centerPosition
-                    const totalTravelDistance = targetX - startOffset;
-                    currentX = startOffset + (totalTravelDistance * animPercentage * speedMultiplier);
-
-                } else { // Truk bergerak dari kanan ke kiri
-                    // Posisi awal dari kanan layar
-                    const initialRightOffset = startOffset; // Nilai negatif ini akan menjadi jarak dari tepi kanan
-                    const startX = vw - truckWidth - initialRightOffset; // Posisi X awal di luar layar kanan
-
-                    // Targetnya adalah centerPosition dari startX
-                    const targetX = centerPosition;
-                    // Jarak yang harus ditempuh dari startX ke centerPosition
-                    const totalTravelDistance = startX - targetX;
-
-                    currentX = startX - (totalTravelDistance * animPercentage * speedMultiplier);
-                }
-
-                el.style.transform = `translateX(${currentX}px)`;
-            });
-        }
-
-        window.addEventListener('scroll', () => {
-            window.requestAnimationFrame(updateTrucksOnScroll);
-        });
-
-        window.addEventListener('load', () => {
-            updateTrucksOnScroll(); // Panggil saat halaman dimuat
-        });
-
-        // Tambahkan event listener untuk merespons perubahan ukuran layar
-        window.addEventListener('resize', () => {
-            updateTrucksOnScroll(); // Panggil ulang saat ukuran layar berubah
-        });
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/flowbite@3.1.2/dist/flowbite.min.js"></script>
+    <script src="https://unpkg.com/taos@1.0.5/dist/taos.js"></script>
 </body>
 
 </html>

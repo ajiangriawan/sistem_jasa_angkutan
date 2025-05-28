@@ -143,7 +143,7 @@ class PermintaanResource extends Resource
                 ->maxLength(500)
                 ->nullable()
                 ->helperText('Opsional, hanya diisi oleh tim support.')
-                ->visible(fn() => Auth::user()?->role === 'support'),
+                ->visible(fn() => in_array(Auth::user()?->role, ['admin', 'operational'])),
 
             Placeholder::make('komentar')
                 ->label('Komentar Verifikasi')
@@ -187,7 +187,11 @@ class PermintaanResource extends Resource
             ->filters([])
             ->actions([
                 Tables\Actions\EditAction::make()
-                    ->visible(fn($record) => !in_array($record->status_verifikasi, ['disetujui', 'ditolak']) || auth()->user()->role === 'admin'),
+                    ->visible(
+                        fn($record) =>
+                        !in_array($record->status_verifikasi, ['disetujui', 'ditolak']) &&
+                            in_array(auth()->user()->role, ['admin', 'operational'])
+                    ),
 
                 Action::make('preview_files')
                     ->label('Dokumen')
@@ -202,7 +206,12 @@ class PermintaanResource extends Resource
                     ->label('Setujui')
                     ->color('success')
                     ->icon('heroicon-o-check-circle')
-                    ->visible(fn($record) => $record->status_verifikasi === 'pending' && Auth::user()->role === 'admin')
+                    ->visible(
+                        fn($record) =>
+                        $record->status_verifikasi === 'pending' &&
+                            in_array(Auth::user()->role, ['admin', 'operational'])
+                    )
+
                     ->form([
                         Forms\Components\Textarea::make('komentar_verifikasi')
                             ->label('Komentar (Opsional)')
@@ -220,7 +229,11 @@ class PermintaanResource extends Resource
                     ->label('Tolak')
                     ->color('danger')
                     ->icon('heroicon-o-x-circle')
-                    ->visible(fn($record) => $record->status_verifikasi === 'pending' && Auth::user()->role === 'admin')
+                    ->visible(
+                        fn($record) =>
+                        $record->status_verifikasi === 'pending'
+                            && in_array(request()->user()->role, ['admin', 'operational'])
+                    )
                     ->form([
                         Forms\Components\Textarea::make('komentar_verifikasi')
                             ->label('Komentar (Opsional)')
@@ -234,10 +247,10 @@ class PermintaanResource extends Resource
                         ]);
                     }),
             ])
-            ->recordUrl(fn ($record) => static::getUrl('view', ['record' => $record]))
+            ->recordUrl(fn($record) => static::getUrl('view', ['record' => $record]))
             ->bulkActions([
                 Tables\Actions\DeleteBulkAction::make()
-                    ->visible(fn () => auth()->user()/*->role === 'admin'*/),
+                    ->visible(fn() => auth()->user()/*->role === 'admin'*/),
             ]);
     }
 

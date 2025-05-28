@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->string('no_sim')->unique();
             $table->string('telepon')->unique();
-            $table->enum('status', ['aktif', 'tugas', 'tidak aktif',])->default('aktif');
+            $table->enum('status', ['aktif', 'dijadwalkan', 'bertugas', 'tidak aktif',])->default('aktif');
             $table->timestamps();
         });
     }

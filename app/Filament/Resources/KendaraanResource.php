@@ -149,7 +149,7 @@ class KendaraanResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\DeleteBulkAction::make()
-                    ->visible(fn() => Auth::user()->role === 'admin'),
+                    ->visible(fn() => in_array(Auth::user()->role, ['admin', 'operational'])),
             ]);
     }
 

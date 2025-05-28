@@ -34,10 +34,12 @@ class JadwalPengiriman extends Model
     /**
      * Relasi ke user (sopir)
      */
-    public function driver()
+
+    public function sopir()
     {
         return $this->belongsTo(Sopir::class, 'driver_id');
     }
+
 
     /**
      * Relasi ke kendaraan

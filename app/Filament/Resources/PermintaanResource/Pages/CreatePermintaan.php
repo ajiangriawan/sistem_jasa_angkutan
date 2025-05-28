@@ -14,10 +14,12 @@ class CreatePermintaan extends CreateRecord
 
     protected function afterCreate(): void
     {
-        $admins = User::where('role', 'admin')->get();
+        $roles = ['admin', 'operational'];
+        $internals = User::whereIn('role', $roles)->get();
+
         $permintaan = $this->record;
 
-        foreach ($admins as $admin) {
+        foreach ($internals as $internal) {
             Notification::make()
                 ->title('Permintaan Pengiriman Baru')
                 ->success()
@@ -28,7 +30,7 @@ class CreatePermintaan extends CreateRecord
                         ->url(PermintaanResource::getUrl(name: 'view', parameters: ['record' => $permintaan]))
                         ->button(),
                 ])
-                ->sendToDatabase($admin);
+                ->sendToDatabase($internal);
         }
     }
 }

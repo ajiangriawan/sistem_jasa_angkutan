@@ -4,16 +4,9 @@ namespace App\Filament\Resources\JadwalPengirimanResource\Pages;
 
 use App\Filament\Resources\JadwalPengirimanResource;
 use Filament\Actions;
-use Filament\Resources\Pages\ListRecords;
+use Filament\Resources\Pages\ViewRecord;
 
-class ListJadwalPengiriman extends ListRecords
+class ViewJadwalPengirimen extends ViewRecord
 {
     protected static string $resource = JadwalPengirimanResource::class;
-
-    protected function getHeaderActions(): array
-    {
-        return [
-            Actions\CreateAction::make(),
-        ];
-    }
 }

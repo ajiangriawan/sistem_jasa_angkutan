@@ -18,7 +18,7 @@ return new class extends Migration
             $table->date('tanggal_permintaan');
             $table->double('estimasi_tonase', 8, 2); // misalnya max 999999.99
 
-            $table->enum('status_verifikasi', ['pending', 'disetujui', 'ditolak'])
+            $table->enum('status_verifikasi', ['pending', 'disetujui', 'dijadwalkan', 'pengambilan', 'pengantaran', 'selesai', 'ditolak'])
                 ->default('pending');
 
             $table->json('dokumen_pendukung')->nullable();

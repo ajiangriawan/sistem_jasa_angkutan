@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('warna', 20);
             $table->string('no_rangka', 50)->unique();
             $table->string('no_mesin', 50)->unique();
-            $table->enum('status', ['siap', 'beroperasi', 'perbaikan', 'rusak'])->default('siap');
+            $table->enum('status', ['siap', 'dijadwalkan', 'beroperasi', 'perbaikan', 'rusak'])->default('siap');
             $table->timestamps();
         });
     }

@@ -69,12 +69,17 @@ class RuteResource extends Resource
             ->filters([])
             ->actions([
                 Tables\Actions\EditAction::make()
-                    ->visible(fn($record) => !in_array($record->status_verifikasi, ['disetujui', 'ditolak']) || auth()->user()->role === 'admin'),
+                    ->visible(
+                        fn($record) =>
+                        !in_array($record->status_verifikasi, ['disetujui', 'ditolak']) &&
+                            in_array(auth()->user()->role, ['admin', 'operational'])
+                    ),
             ])
-            ->recordUrl(fn ($record) => static::getUrl('view', ['record' => $record]))
+            ->recordUrl(fn($record) => static::getUrl('view', ['record' => $record]))
             ->bulkActions([
                 Tables\Actions\DeleteBulkAction::make()
-                    ->visible(fn () => auth()->user()->role === 'admin'),
+                    ->visible(fn() => in_array(Auth::user()?->role, ['admin', 'operational'])),
+
             ]);
     }
 
