@@ -178,7 +178,11 @@ class PermintaanResource extends Resource
                     ->color(function (string $state): string {
                         return match ($state) {
                             'pending' => 'warning',
-                            'disetujui' => 'success',
+                            'disetujui' => 'primary',
+                            'dijadwalkan' => 'grey', 
+                            'pengambilan' => 'info', 
+                            'pengantaran' => 'info',
+                            'selesai' => 'success',
                             'ditolak' => 'danger',
                             default => 'gray',
                         };

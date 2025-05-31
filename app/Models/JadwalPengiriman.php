@@ -40,12 +40,16 @@ class JadwalPengiriman extends Model
         return $this->belongsTo(Sopir::class, 'driver_id');
     }
 
-
     /**
      * Relasi ke kendaraan
      */
     public function kendaraan()
     {
         return $this->belongsTo(Kendaraan::class, 'kendaraan_id');
+    }
+
+    public function pengiriman()
+    {
+        return $this->hasOne(Pengiriman::class, 'jadwal_id');
     }
 }

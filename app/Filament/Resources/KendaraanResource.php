@@ -115,18 +115,24 @@ class KendaraanResource extends Resource
                 Tables\Columns\TextColumn::make('tahun')->label('Tahun'),
                 Tables\Columns\BadgeColumn::make('status')
                     ->label('Status')
-                    ->colors([
-                        'danger' => 'rusak',
-                        'success' => 'siap',
-                        'warning' => 'perbaikan',
-                        'info' => 'beroperasi',
-                    ]),
+                    ->formatStateUsing(function (string $state): string {
+                        return ucfirst($state); // Tampilkan status dengan huruf besar depan
+                    })
+                    ->color(function (string $state): string {
+                        return match ($state) {
+                            'perbaikan' => 'warning',
+                            'beroperasi' => 'primary',
+                            'dijadwalkan' => 'info', 
+                            'siap' => 'success',
+                            'rusak' => 'danger',
+                            default => 'gray',
+                        };
+                    }),
             ])
             ->filters([])
             ->recordUrl(fn($record) => static::getUrl('view', ['record' => $record]))
             ->actions([
                 Tables\Actions\EditAction::make(),
-
                 Tables\Actions\Action::make('ubah_status')
                     ->label('Ubah Status')
                     ->icon('heroicon-o-arrows-up-down')

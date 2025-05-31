@@ -11,7 +11,7 @@ class Sopir extends Model
 
     protected $guarded=[];
 
-    protected $fillable = ['user_id', 'no_sim', 'telepon'];
+    protected $fillable = ['user_id', 'no_sim', 'telepon', 'status'];
 
     public function user()
     {

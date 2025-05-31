@@ -1,0 +1,1 @@
+ln -s /home/balinksa/bss/storage/app/public /home/balinksa/public_html/storage

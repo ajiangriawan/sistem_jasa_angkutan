@@ -35,7 +35,7 @@ return new class extends Migration
                 ->onDelete('set null');
 
             // Status pengiriman: dijadwalkan, dalam perjalanan, selesai, dibatalkan
-            $table->enum('status', ['dijadwalkan', 'dalam_perjalanan', 'selesai', 'dibatalkan'])->default('dijadwalkan');
+            $table->enum('status', ['dijadwalkan', 'pengambilan', 'pengantaran', 'selesai', 'dibatalkan'])->default('dijadwalkan');
 
             // Catatan opsional
             $table->text('catatan')->nullable();
