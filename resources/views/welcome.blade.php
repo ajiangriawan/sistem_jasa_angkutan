@@ -17,7 +17,7 @@
     <nav class="bg-white dark:bg-gray-800 fixed w-full z-20 top-0 start-0 border-b border-gray-200 dark:border-gray-600">
         <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
             <a href="/" class="flex items-center space-x-3 rtl:space-x-reverse">
-                <img src="{{ asset('images/logo.png') }}" class="h-8" alt="Bss Logo">
+                <img src="{{ asset('images/logo.png') }}" class="h-8 bg-white rounded-full" alt="Bss Logo">
                 <span class="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">PT BSS</span>
             </a>
             <div class="flex md:order-2 space-x-3 md:space-x-0 rtl:space-x-reverse">
@@ -79,7 +79,7 @@
         <section id="layanan" class="mt-2 px-8 py-14 max-w-6xl mx-auto">
             <h3 class="text-3xl font-bold mb-10 text-center glow-text">Layanan Kami</h3>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-12 text-black">
-                <div class="p-6 rounded-xl shadow-lg bg-orange-300 hover:bg-white hover:border-4 hover:border-orange-300 cursor-pointer transition delay-[200ms] duration-[600ms] taos:translate-y-[-100%] taos:opacity-0" data-taos-offset="500">
+                <div class="p-6 rounded-xl shadow-lg bg-orange-300" data-taos-offset="500">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="black" class="w-14 h-14 mb-5 text-orange-400 mx-auto">
                         <path d="M3.375 4.5C2.339 4.5 1.5 5.34 1.5 6.375V13.5h12V6.375c0-1.036-.84-1.875-1.875-1.875h-8.25ZM13.5 15h-12v2.625c0 1.035.84 1.875 1.875 1.875h.375a3 3 0 1 1 6 0h3a.75.75 0 0 0 .75-.75V15Z" />
                         <path d="M8.25 19.5a1.5 1.5 0 1 0-3 0 1.5 1.5 0 0 0 3 0ZM15.75 6.75a.75.75 0 0 0-.75.75v11.25c0 .087.015.17.042.248a3 3 0 0 1 5.958.464c.853-.175 1.522-.935 1.464-1.883a18.659 18.659 0 0 0-3.732-10.104 1.837 1.837 0 0 0-1.47-.725H15.75Z" />
@@ -89,7 +89,7 @@
                     <p class="text-center">
                         Pengangkutan batubara dengan armada truk khusus dan dukungan logistik profesional.</p>
                 </div>
-                <div class="p-6 rounded-xl shadow-lg bg-orange-300 hover:bg-white hover:border-4 hover:border-orange-300 cursor-pointer transition delay-[400ms] duration-[600ms] taos:translate-y-[-100%] taos:opacity-0" data-taos-offset="500">
+                <div class="p-6 rounded-xl shadow-lg bg-orange-300 " data-taos-offset="500">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="black" class="w-14 h-14 mb-5 text-orange-400 mx-auto">
                         <path fill-rule="evenodd" d="M12 5.25c1.213 0 2.415.046 3.605.135a3.256 3.256 0 0 1 3.01 3.01c.044.583.077 1.17.1 1.759L17.03 8.47a.75.75 0 1 0-1.06 1.06l3 3a.75.75 0 0 0 1.06 0l3-3a.75.75 0 0 0-1.06-1.06l-1.752 1.751c-.023-.65-.06-1.296-.108-1.939a4.756 4.756 0 0 0-4.392-4.392 49.422 49.422 0 0 0-7.436 0A4.756 4.756 0 0 0 3.89 8.282c-.017.224-.033.447-.046.672a.75.75 0 1 0 1.497.092c.013-.217.028-.434.044-.651a3.256 3.256 0 0 1 3.01-3.01c1.19-.09 2.392-.135 3.605-.135Zm-6.97 6.22a.75.75 0 0 0-1.06 0l-3 3a.75.75 0 1 0 1.06 1.06l1.752-1.751c.023.65.06 1.296.108 1.939a4.756 4.756 0 0 0 4.392 4.392 49.413 49.413 0 0 0 7.436 0 4.756 4.756 0 0 0 4.392-4.392c.017-.223.032-.447.046-.672a.75.75 0 0 0-1.497-.092c-.013.217-.028.434-.044.651a3.256 3.256 0 0 1-3.01 3.01 47.953 47.953 0 0 1-7.21 0 3.256 3.256 0 0 1-3.01-3.01 47.759 47.759 0 0 1-.1-1.759L6.97 15.53a.75.75 0 0 0 1.06-1.06l-3-3Z" clip-rule="evenodd" />
                     </svg>
@@ -98,7 +98,7 @@
                     <p class="text-center">
                         Solusi logistik dari tambang hingga pengiriman dengan koordinasi terbaik.</p>
                 </div>
-                <div class="p-6 rounded-xl shadow-lg bg-orange-300 hover:bg-white hover:border-4 hover:border-orange-300 cursor-pointer transition delay-[600ms] duration-[600ms] taos:translate-y-[-100%] taos:opacity-0" data-taos-offset="500">
+                <div class="p-6 rounded-xl shadow-lg bg-orange-300 " data-taos-offset="500">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="black" class="w-14 h-14 mb-5 text-orange-400 mx-auto">
                         <path fill-rule="evenodd" d="M2.25 5.25a3 3 0 0 1 3-3h13.5a3 3 0 0 1 3 3V15a3 3 0 0 1-3 3h-3v.257c0 .597.237 1.17.659 1.591l.621.622a.75.75 0 0 1-.53 1.28h-9a.75.75 0 0 1-.53-1.28l.621-.622a2.25 2.25 0 0 0 .659-1.59V18h-3a3 3 0 0 1-3-3V5.25Zm1.5 0v7.5a1.5 1.5 0 0 0 1.5 1.5h13.5a1.5 1.5 0 0 0 1.5-1.5v-7.5a1.5 1.5 0 0 0-1.5-1.5H5.25a1.5 1.5 0 0 0-1.5 1.5Z" clip-rule="evenodd" />
                     </svg>

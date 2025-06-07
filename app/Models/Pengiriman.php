@@ -14,9 +14,6 @@ class Pengiriman extends Model
     protected $fillable = [
         'jadwal_id',
         'tonase',
-        'surat_jalan',
-        'do_muat',
-        'do_bongkar',
         'tanggal',
         'catatan',
     ];

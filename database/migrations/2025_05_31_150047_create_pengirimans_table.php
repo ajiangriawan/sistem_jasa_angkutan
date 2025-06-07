@@ -15,9 +15,6 @@ return new class extends Migration
             $table->id();
             $table->foreignId('jadwal_id')->constrained('jadwal_pengirimans')->onDelete('cascade');
             $table->decimal('tonase', 8, 2)->nullable();
-            $table->string('surat_jalan')->nullable();     // path file
-            $table->string('do_muat')->nullable();         // path file
-            $table->string('do_bongkar')->nullable();      // path file
             $table->date('tanggal')->nullable();           // tanggal pengiriman
             $table->text('catatan')->nullable();
             $table->timestamps();

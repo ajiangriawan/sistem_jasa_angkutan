@@ -11,13 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('sopirs', function (Blueprint $table) {
+        Schema::create('pasangan_sopir_kendaraans', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->string('no_sim')->unique();
-            $table->string('telepon')->unique();
-            $table->enum('status', ['aktif', 'dijadwalkan', 'bertugas', 'tidak aktif',])->default('aktif');
+            $table->foreignId('driver_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('kendaraan_id')->constrained()->onDelete('cascade');
             $table->timestamps();
+
+            $table->unique(['driver_id', 'kendaraan_id']);
         });
     }
 
@@ -26,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('sopirs');
+        Schema::dropIfExists('pasangan_sopir_kendaraans');
     }
 };

@@ -22,7 +22,7 @@ class KendaraanResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return Auth::check() && in_array(Auth::user()->role, ['admin', 'operational']);
+        return Auth::check() && in_array(Auth::user()->role, ['operasional_transportasi']);
     }
 
     public static function shouldRegisterNavigation(): bool
@@ -38,29 +38,25 @@ class KendaraanResource extends Resource
                 ->required()
                 ->maxLength(15)
                 ->unique(ignoreRecord: true)
-                ->live(onBlur: true)
-                ->afterStateUpdated(fn($state, Forms\Set $set) => $set('no_polisi', strtoupper($state))),
+                ->live(onBlur: true),
 
             Forms\Components\TextInput::make('merk')
                 ->label('Merk')
                 ->required()
                 ->maxLength(20)
-                ->live(onBlur: true)
-                ->afterStateUpdated(fn($state, Forms\Set $set) => $set('merk', strtoupper($state))),
+                ->live(onBlur: true),
 
             Forms\Components\TextInput::make('type')
                 ->label('Tipe')
                 ->required()
                 ->maxLength(50)
-                ->live(onBlur: true)
-                ->afterStateUpdated(fn($state, Forms\Set $set) => $set('type', strtoupper($state))),
+                ->live(onBlur: true),
 
             Forms\Components\TextInput::make('jenis')
                 ->label('Jenis')
                 ->required()
                 ->maxLength(20)
-                ->live(onBlur: true)
-                ->afterStateUpdated(fn($state, Forms\Set $set) => $set('jenis', strtoupper($state))),
+                ->live(onBlur: true),
 
             Forms\Components\TextInput::make('tahun')
                 ->label('Tahun')
@@ -73,32 +69,30 @@ class KendaraanResource extends Resource
                 ->label('Warna')
                 ->required()
                 ->maxLength(20)
-                ->live(onBlur: true)
-                ->afterStateUpdated(fn($state, Forms\Set $set) => $set('warna', strtoupper($state))),
+                ->live(onBlur: true),
 
             Forms\Components\TextInput::make('no_rangka')
                 ->label('Nomor Rangka')
                 ->required()
                 ->maxLength(50)
-                ->live(onBlur: true)
-                ->afterStateUpdated(fn($state, Forms\Set $set) => $set('no_rangka', strtoupper($state))),
+                ->live(onBlur: true),
 
             Forms\Components\TextInput::make('no_mesin')
                 ->label('Nomor Mesin')
                 ->required()
                 ->maxLength(50)
-                ->live(onBlur: true)
-                ->afterStateUpdated(fn($state, Forms\Set $set) => $set('no_mesin', strtoupper($state))),
+                ->live(onBlur: true),
 
             Forms\Components\Select::make('status')
                 ->label('Status')
                 ->options([
-                    'siap' => 'SIAP',
-                    'beroperasi' => 'BEROPERASI',
-                    'perbaikan' => 'PERBAIKAN',
-                    'rusak' => 'RUSAK'
+                    'siap' => 'Siap',
+                    'beroperasi' => 'Beroperasi',
+                    'perbaikan' => 'Perbaikan',
+                    'rusak' => 'Rusak'
                 ])
                 ->required()
+                ->default('siap')
                 ->searchable()
                 ->reactive(),
         ]);
@@ -115,18 +109,14 @@ class KendaraanResource extends Resource
                 Tables\Columns\TextColumn::make('tahun')->label('Tahun'),
                 Tables\Columns\BadgeColumn::make('status')
                     ->label('Status')
-                    ->formatStateUsing(function (string $state): string {
-                        return ucfirst($state); // Tampilkan status dengan huruf besar depan
-                    })
-                    ->color(function (string $state): string {
-                        return match ($state) {
-                            'perbaikan' => 'warning',
-                            'beroperasi' => 'primary',
-                            'dijadwalkan' => 'info', 
-                            'siap' => 'success',
-                            'rusak' => 'danger',
-                            default => 'gray',
-                        };
+                    ->formatStateUsing(fn(string $state) => ucfirst($state))
+                    ->color(fn(string $state) => match ($state) {
+                        'perbaikan' => 'warning',
+                        'beroperasi' => 'primary',
+                        'dijadwalkan' => 'info',
+                        'siap' => 'success',
+                        'rusak' => 'danger',
+                        default => 'gray',
                     }),
             ])
             ->filters([])
@@ -151,14 +141,13 @@ class KendaraanResource extends Resource
                             ])
                             ->searchable(),
                     ])
-                    ->visible(fn() => in_array(Auth::user()->role, ['admin', 'operational'])),
+                    ->visible(fn() => in_array(Auth::user()->role, ['operasional_transportasi'])),
             ])
             ->bulkActions([
                 Tables\Actions\DeleteBulkAction::make()
-                    ->visible(fn() => in_array(Auth::user()->role, ['admin', 'operational'])),
+                    ->visible(fn() => in_array(Auth::user()->role, ['operasional_transportasi'])),
             ]);
     }
-
 
     public static function getRelations(): array
     {

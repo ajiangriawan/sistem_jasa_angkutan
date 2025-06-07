@@ -4,7 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\PermintaanResource\Pages;
 use App\Models\Permintaan;
-use App\Models\Customer;
+use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -14,7 +14,11 @@ use Illuminate\Support\Facades\Auth;
 use Filament\Tables\Actions\Action;
 use Filament\Forms\Components\Select;
 use App\Models\Rute;
+use App\Filament\Resources\JadwalPengirimanResource;
 use Filament\Forms\Components\Placeholder;
+use Filament\Notifications\Notification;
+use Filament\Notifications\Actions\Action as NotificationAction;
+use Filament\Facades\Filament;
 
 
 class PermintaanResource extends Resource
@@ -25,7 +29,7 @@ class PermintaanResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return Auth::check() && in_array(Auth::user()->role, ['admin', 'operational', 'customer']);
+        return Auth::check() && in_array(Auth::user()->role, ['operational', 'customer', 'pemasaran_cs', 'operasional_pengiriman']);
     }
 
     public static function shouldRegisterNavigation(): bool
@@ -38,27 +42,24 @@ class PermintaanResource extends Resource
         return $form->schema([
 
             Forms\Components\Hidden::make('customer_id')
-                ->default(fn() => Customer::where('user_id', Auth::id())->value('id'))
+                ->default(fn() => Auth::id())
                 ->required(),
 
-            Placeholder::make('nama_perusahaan')
+            Placeholder::make('name')
                 ->label('Nama Perusahaan')
                 ->content(function ($get, $record = null) {
-                    if ($record !== null && $record->customer) {
-                        return $record->customer->nama_perusahaan;
-                    }
-                    // On create, get nama_perusahaan from Customer related to logged in user
-                    return Customer::where('user_id', Auth::id())->value('nama_perusahaan') ?? '-';
+                    return $record?->customer?->name
+                        ?? Auth::user()?->name
+                        ?? '-';
                 }),
 
-            // Pilihan Rute
             Select::make('rute_id')
                 ->label('Rute Pengiriman')
                 ->relationship(
                     'rute',
                     'nama_rute',
                     fn($query) => Auth::user()?->role === 'customer'
-                        ? $query->where('customer_id', Customer::where('user_id', Auth::id())->value('id'))
+                        ? $query->where('customer_id', Auth::id())
                         : $query
                 )
                 ->searchable()
@@ -67,18 +68,10 @@ class PermintaanResource extends Resource
                 ->reactive()
                 ->afterStateUpdated(function (callable $set, $state) {
                     $rute = Rute::find($state);
-
-                    if ($rute) {
-                        $set('jarak_km', $rute->jarak_km . ' km');
-                        $set('harga_rute', 'Rp ' . number_format($rute->harga, 0, ',', '.'));
-                        $set('uang_jalan_rute', 'Rp ' . number_format($rute->uang_jalan, 0, ',', '.'));
-                        $set('bonus_rute', 'Rp ' . number_format($rute->bonus, 0, ',', '.'));
-                    } else {
-                        $set('jarak_km', null);
-                        $set('harga_rute', null);
-                        $set('uang_jalan_rute', null);
-                        $set('bonus_rute', null);
-                    }
+                    $set('jarak_km', $rute?->jarak_km ? "{$rute->jarak_km} km" : null);
+                    $set('harga_rute', $rute ? 'Rp ' . number_format($rute->harga, 0, ',', '.') : null);
+                    $set('uang_jalan_rute', $rute ? 'Rp ' . number_format($rute->uang_jalan, 0, ',', '.') : null);
+                    $set('bonus_rute', $rute ? 'Rp ' . number_format($rute->bonus, 0, ',', '.') : null);
                 }),
 
             // Informasi Rute: Jarak, Harga, Uang Jalan, Bonus
@@ -126,6 +119,13 @@ class PermintaanResource extends Resource
                 ->numeric()
                 ->required(),
 
+            Forms\Components\TextInput::make('jumlah_unit')
+                ->label('Jumlah Unit')
+                ->numeric()
+                ->minValue(1)
+                ->default(1)
+                ->required(),
+
             Forms\Components\FileUpload::make('dokumen_pendukung')
                 ->label('Dokumen Pendukung (PDF atau Gambar)')
                 ->multiple()
@@ -143,7 +143,7 @@ class PermintaanResource extends Resource
                 ->maxLength(500)
                 ->nullable()
                 ->helperText('Opsional, hanya diisi oleh tim support.')
-                ->visible(fn() => in_array(Auth::user()?->role, ['admin', 'operational'])),
+                ->visible(fn() => in_array(Auth::user()?->role, ['pemasaran_cs'])),
 
             Placeholder::make('komentar')
                 ->label('Komentar Verifikasi')
@@ -156,10 +156,29 @@ class PermintaanResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->query(function () {
+                $query = Permintaan::query()
+                    ->orderByRaw("
+                    CASE 
+                        WHEN status_verifikasi = 'selesai' THEN 1
+                        ELSE 0
+                    END ASC
+                ")
+                    ->orderBy('tanggal_permintaan', 'desc');
+
+                // Batasi permintaan berdasarkan user jika role-nya customer
+                if (Auth::user()->role === 'customer') {
+                    $query->where('customer_id', Auth::id());
+                }
+
+                return $query;
+            })
             ->columns([
-                Tables\Columns\TextColumn::make('customer.nama_perusahaan')
+                Tables\Columns\TextColumn::make('customer.name')
                     ->label('Customer')
-                    ->searchable(),
+                    ->searchable()
+                    ->sortable(),
+
 
                 Tables\Columns\TextColumn::make('tanggal_permintaan')
                     ->label('Tanggal')
@@ -170,6 +189,9 @@ class PermintaanResource extends Resource
                     ->searchable()
                     ->sortable(),
 
+                Tables\Columns\TextColumn::make('jumlah_unit')
+                    ->label('Jumlah'),
+
                 Tables\Columns\BadgeColumn::make('status_verifikasi')
                     ->label('Status')
                     ->formatStateUsing(function (string $state): string {
@@ -179,11 +201,12 @@ class PermintaanResource extends Resource
                         return match ($state) {
                             'pending' => 'warning',
                             'disetujui' => 'primary',
-                            'dijadwalkan' => 'grey', 
-                            'pengambilan' => 'info', 
-                            'pengantaran' => 'info',
+                            'dijadwalkan' => 'gray',
+                            'Dalam Proses' => 'info',
+                            'Sebagian Berjalan' => 'info',
                             'selesai' => 'success',
                             'ditolak' => 'danger',
+                            'Belum Ada Detail' => 'danger',
                             default => 'gray',
                         };
                     }),
@@ -193,8 +216,8 @@ class PermintaanResource extends Resource
                 Tables\Actions\EditAction::make()
                     ->visible(
                         fn($record) =>
-                        !in_array($record->status_verifikasi, ['disetujui', 'ditolak']) &&
-                            in_array(auth()->user()->role, ['admin', 'operational'])
+                        !in_array($record->status_verifikasi, ['disetujui', 'ditolak', 'selesai']) &&
+                            in_array(auth()->user()->role, ['pemasaran_cs', 'customer'])
                     ),
 
                 Action::make('preview_files')
@@ -213,9 +236,8 @@ class PermintaanResource extends Resource
                     ->visible(
                         fn($record) =>
                         $record->status_verifikasi === 'pending' &&
-                            in_array(Auth::user()->role, ['admin', 'operational'])
+                            in_array(Auth::user()->role, ['pemasaran_cs'])
                     )
-
                     ->form([
                         Forms\Components\Textarea::make('komentar_verifikasi')
                             ->label('Komentar (Opsional)')
@@ -223,11 +245,45 @@ class PermintaanResource extends Resource
                             ->nullable(),
                     ])
                     ->action(function (array $data, Permintaan $record) {
+                        // Update status permintaan
                         $record->update([
                             'status_verifikasi' => 'disetujui',
                             'komentar_verifikasi' => $data['komentar_verifikasi'] ?? null,
                         ]);
+
+                        // Kirim notifikasi ke operasional_pengiriman
+                        $users = User::where('role', 'operasional_pengiriman')->get();
+                        foreach ($users as $user) {
+                            Notification::make()
+                                ->title('Permintaan Disetujui')
+                                ->success()
+                                ->icon('heroicon-o-check-circle')
+                                ->body("Permintaan dari {$record->customer->name} telah disetujui. Silakan atur jadwal pengiriman.")
+                                ->actions([
+                                    NotificationAction::make('Lihat')
+                                        ->url(self::getUrl('view', ['record' => $record]))
+                                        ->button(),
+                                ])
+                                ->sendToDatabase($user);
+                        }
                     }),
+
+                Action::make('buat_jadwal')
+                    ->label('Buat Jadwal')
+                    ->icon('heroicon-o-calendar-days')
+                    ->color('primary')
+                    ->visible(
+                        fn($record) =>
+                        $record->status_verifikasi === 'disetujui' &&
+                            in_array(Auth::user()->role, ['operasional_pengiriman'])
+                    )
+                    ->url(
+                        fn($record) =>
+                        JadwalPengirimanResource::getUrl('create', [
+                            'permintaan_id' => $record->id
+                        ])
+                    ),
+
 
                 Action::make('tolak')
                     ->label('Tolak')
@@ -236,7 +292,7 @@ class PermintaanResource extends Resource
                     ->visible(
                         fn($record) =>
                         $record->status_verifikasi === 'pending'
-                            && in_array(request()->user()->role, ['admin', 'operational'])
+                            && in_array(request()->user()->role, ['pemasaran_cs'])
                     )
                     ->form([
                         Forms\Components\Textarea::make('komentar_verifikasi')
@@ -249,7 +305,24 @@ class PermintaanResource extends Resource
                             'status_verifikasi' => 'ditolak',
                             'komentar_verifikasi' => $data['komentar_verifikasi'] ?? null,
                         ]);
+
+                        // Kirim notifikasi ke customer yang membuat permintaan
+                        $customer = $record->customer;
+                        if ($customer) {
+                            Notification::make()
+                                ->title('Permintaan Ditolak')
+                                ->danger()
+                                ->icon('heroicon-o-x-circle')
+                                ->body("Permintaan pengiriman Anda telah ditolak oleh tim pemasaran. Silakan periksa detailnya.")
+                                ->actions([
+                                    NotificationAction::make('Lihat')
+                                        ->url(self::getUrl('view', ['record' => $record]))
+                                        ->button(),
+                                ])
+                                ->sendToDatabase($customer);
+                        }
                     }),
+
             ])
             ->recordUrl(fn($record) => static::getUrl('view', ['record' => $record]))
             ->bulkActions([
@@ -266,5 +339,20 @@ class PermintaanResource extends Resource
             'edit' => Pages\EditPermintaan::route('/{record}/edit'),
             'view' => Pages\ViewPermintaan::route('/{record}'),
         ];
+    }
+
+    public static function getNavigationBadge(): ?string
+    {
+        $user = Filament::auth()->user();
+
+        if ($user->role === 'pemasaran_cs') {
+            return (string) Permintaan::where('status_verifikasi', 'pending')->count();
+        }
+
+        if ($user->role === 'operasional_pengiriman') {
+            return (string) Permintaan::where('status_verifikasi', 'disetujui')->count();
+        }
+
+        return null;
     }
 }

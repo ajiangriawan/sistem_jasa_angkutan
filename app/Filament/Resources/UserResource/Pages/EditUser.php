@@ -8,7 +8,7 @@ use Filament\Resources\Pages\EditRecord;
 class EditUser extends EditRecord
 {
     protected static string $resource = UserResource::class;
-
+/*
     // Menampilkan data customer & sopir ke form saat edit
     protected function mutateFormDataBeforeFill(array $data): array
     {
@@ -63,7 +63,7 @@ class EditUser extends EditRecord
             $record->sopir()->delete();
         }
     }
-
+*/
     // Redirect ke halaman daftar user setelah update
     protected function getRedirectUrl(): string
     {

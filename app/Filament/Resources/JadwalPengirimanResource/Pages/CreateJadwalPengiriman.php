@@ -12,17 +12,33 @@ use Illuminate\Support\Carbon;
 class CreateJadwalPengiriman extends CreateRecord
 {
     protected static string $resource = JadwalPengirimanResource::class;
+
+    public function mount(): void
+    {
+        parent::mount();
+
+        // Auto-isi permintaan_id jika dikirim melalui query string
+        if (request()->has('permintaan_id')) {
+            $this->form->fill([
+                'permintaan_id' => request()->get('permintaan_id'),
+            ]);
+        }
+    }
+
     protected function afterCreate(): void
     {
         $jadwal = $this->record;
 
-        $tanggalBerangkatFormatted = \Carbon\Carbon::parse($jadwal->tanggal_berangkat)->format('d M Y');
+        $tanggalBerangkatFormatted = Carbon::parse($jadwal->tanggal_berangkat)->format('d M Y');
         $jamBerangkatFormatted = $jadwal->jam_berangkat
-            ? \Carbon\Carbon::parse($jadwal->jam_berangkat)->format('H:i')
+            ? Carbon::parse($jadwal->jam_berangkat)->format('H:i')
             : null;
 
-        // Notifikasi ke customer
-        $customerUser = $jadwal->permintaan->customer->user ?? null;
+        // =======================
+        // === Notifikasi ke customer ===
+        // =======================
+        $customerUser = $jadwal->permintaan->customer ?? null;
+
         if ($customerUser) {
             Notification::make()
                 ->title('Jadwal Pengiriman Telah Dibuat')
@@ -37,32 +53,33 @@ class CreateJadwalPengiriman extends CreateRecord
                 ->sendToDatabase($customerUser);
         }
 
-        // Notifikasi ke sopir
-        $driverUser = $jadwal->sopir->user ?? null;
-        if ($driverUser) {
-            Notification::make()
-                ->title('Tugas Pengiriman Baru')
-                ->success()
-                ->icon('heroicon-o-calendar-days')
-                ->body("Anda dijadwalkan untuk mengantar pengiriman ke {$jadwal->permintaan->customer->nama_perusahaan} pada {$tanggalBerangkatFormatted}" . ($jamBerangkatFormatted ? " pukul {$jamBerangkatFormatted}" : "") . ".")
-                ->actions([
-                    Action::make('Lihat')
-                        ->url(JadwalPengirimanResource::getUrl(name: 'view', parameters: ['record' => $jadwal]))
-                        ->button(),
-                ])
-                ->sendToDatabase($driverUser);
+        foreach ($jadwal->detailJadwal as $detail) {
+            $sopir = $detail->pasangan->sopir ?? null;
+            if ($sopir) {
+                Notification::make()
+                    ->title('Tugas Pengiriman Baru')
+                    ->success()
+                    ->icon('heroicon-o-calendar-days')
+                    ->body("Anda dijadwalkan untuk pengiriman ke {$customerUser?->name} pada {$tanggalBerangkatFormatted}" . ($jamBerangkatFormatted ? " pukul {$jamBerangkatFormatted}" : "") . ".")
+                    ->actions([
+                        Action::make('Lihat')
+                            ->url(JadwalPengirimanResource::getUrl(name: 'view', parameters: ['record' => $jadwal]))
+                            ->button(),
+                    ])
+                    ->sendToDatabase($sopir);
+
+                // Ubah status sopir jadi 'dijadwalkan'
+                $sopir->update([
+                    'status' => 'dijadwalkan',
+                ]);
+            }
         }
 
-        // Ubah status permintaan, kendaraan, dan sopir jadi 'dijadwalkan'
         $jadwal->permintaan->update([
             'status_verifikasi' => 'dijadwalkan',
         ]);
 
         $jadwal->kendaraan?->update([
-            'status' => 'dijadwalkan',
-        ]);
-
-        $jadwal->sopir?->update([
             'status' => 'dijadwalkan',
         ]);
     }

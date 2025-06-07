@@ -18,11 +18,9 @@ class UserResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-user';
     protected static ?string $navigationGroup = 'Manajemen Pengguna';
 
-
     public static function canViewAny(): bool
     {
-
-        return Auth::check() && in_array(Auth::user()->role, ['admin', 'operational']);
+        return Auth::check() && in_array(Auth::user()->role, ['admin_hr']);
     }
 
     public static function shouldRegisterNavigation(): bool
@@ -30,17 +28,14 @@ class UserResource extends Resource
         return self::canViewAny();
     }
 
-
     public static function form(Form $form): Form
     {
         return $form->schema([
-            // Field Nama Lengkap
             Forms\Components\TextInput::make('name')
                 ->label('Nama Lengkap')
                 ->required()
                 ->maxLength(255),
 
-            // Field Email
             Forms\Components\TextInput::make('email')
                 ->label('Email')
                 ->email()
@@ -48,60 +43,53 @@ class UserResource extends Resource
                 ->unique(ignoreRecord: true)
                 ->maxLength(255),
 
-            // Field Password
             Forms\Components\TextInput::make('password')
                 ->label('Password')
                 ->password()
                 ->required(fn($livewire) => $livewire instanceof Pages\CreateUser)
                 ->dehydrateStateUsing(fn($state) => filled($state) ? bcrypt($state) : null)
-                ->dehydrated(fn($state) => filled($state)) // ⬅ hanya update jika diisi
+                ->dehydrated(fn($state) => filled($state))
                 ->maxLength(255)
                 ->autocomplete('new-password'),
 
-            // Field Role
+            Forms\Components\TextInput::make('telepon')
+                ->label('Telepon')
+                ->tel()
+                ->maxLength(15)
+                ->nullable(),
+
+            Forms\Components\Textarea::make('alamat')
+                ->label('Alamat')
+                ->maxLength(65535)
+                ->nullable(),
+
             Forms\Components\Select::make('role')
                 ->label('Peran / Role')
                 ->options([
-                    'admin' => 'Admin',
-                    'operational' => 'Operasional',
-                    'driver' => 'Sopir',
+                    'admin_direksi' => 'Direksi',
+                    'admin_hr' => 'HR',
+                    'operasional_pengiriman' => 'Pengiriman',
+                    'operasional_transportasi' => 'Transportasi',
+                    'operasional_bengkel' => 'Bengkel',
+                    'operasional_teknisi' => 'Teknisi',
+                    'operasional_sopir' => 'Sopir',
+                    'akuntan' => 'Akuntan',
+                    'pemasaran_cs' => 'CS',
                     'customer' => 'Customer',
-
                 ])
                 ->required()
-                ->searchable()
-                ->reactive(),
+                ->searchable(),
 
-            // Field Nama Perusahaan, muncul jika role adalah 'customer'
-            Forms\Components\TextInput::make('customer.nama_perusahaan')
-                ->label('Nama Perusahaan')
-                ->visible(fn(Get $get) => $get('role') === 'customer')
-                ->requiredIf('role', 'customer')
-                ->maxLength(255)
-                // Isi nilai jika sudah ada (misalnya, dengan menggunakan relasi atau nilai dari customer)
-                ->default(fn($get) => optional($get('customer'))->nama_perusahaan),
-
-            // Field Alamat, muncul jika role adalah 'customer'
-            Forms\Components\Textarea::make('customer.alamat')
-                ->label('Alamat')
-                ->visible(fn(Get $get) => $get('role') === 'customer')
-                ->requiredIf('role', 'customer')
-                ->maxLength(65535)
-                // Isi nilai jika sudah ada (misalnya, dengan menggunakan relasi atau nilai dari customer)
-                ->default(fn($get) => optional($get('customer'))->alamat),
-
-            Forms\Components\TextInput::make('sopir.no_sim')
-                ->label('Nomor SIM')
-                ->visible(fn(Get $get) => $get('role') === 'driver')
-                ->requiredIf('role', 'driver')
-                ->maxLength(20),
-
-            Forms\Components\TextInput::make('sopir.telepon')
-                ->label('Nomor Telepon')
-                ->visible(fn(Get $get) => $get('role') === 'driver')
-                ->requiredIf('role', 'driver')
-                ->maxLength(15)
-
+            Forms\Components\Select::make('status')
+                ->label('Status')
+                ->options([
+                    'aktif' => 'Aktif',
+                    'dijadwalkan' => 'Dijadwalkan',
+                    'bertugas' => 'Bertugas',
+                    'tidak aktif' => 'Tidak Aktif',
+                ])
+                ->default('aktif')
+                ->required(),
         ]);
     }
 
@@ -120,12 +108,28 @@ class UserResource extends Resource
 
                 Tables\Columns\BadgeColumn::make('role')
                     ->label('Role')
+                    ->color(fn(string $state): string => match ($state) {
+                        'admin_direksi', 'admin_hr' => 'danger',
+                        'operasional_pengiriman',
+                        'operasional_transportasi',
+                        'operasional_bengkel',
+                        'operasional_teknisi',
+                        'operasional_sopir' => 'warning',
+                        'akuntan' => 'info',
+                        'pemasaran_cs' => 'gray',
+                        'customer' => 'success',
+                        default => 'gray',
+                    }),
+
+                Tables\Columns\BadgeColumn::make('status')
+                    ->label('Status')
                     ->colors([
-                        'danger' => 'admin',
-                        'success' => 'customer',
-                        'warning' => 'operational',
-                        'info' => 'driver',
-                    ]),
+                        'success' => 'aktif',
+                        'warning' => 'dijadwalkan',
+                        'info' => 'bertugas',
+                        'danger' => 'tidak aktif',
+                    ])
+                    ->sortable(),
             ])
             ->filters([])
             ->actions([
@@ -134,7 +138,7 @@ class UserResource extends Resource
             ->recordUrl(fn($record) => static::getUrl('view', ['record' => $record]))
             ->bulkActions([
                 Tables\Actions\DeleteBulkAction::make()
-                    ->visible(fn() => auth()->user()->role === 'admin'),
+                    ->visible(fn() => auth()->user()->role === 'admin_hr'),
             ]);
     }
 

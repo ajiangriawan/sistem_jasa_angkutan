@@ -1,20 +1,16 @@
 <?php
 
-
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\RuteResource\Pages;
-use App\Filament\Resources\RuteResource\RelationManagers;
 use App\Models\Rute;
+use App\Models\User;
 use Filament\Forms;
-use Filament\Forms\Components\Select;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class RuteResource extends Resource
 {
@@ -24,8 +20,7 @@ class RuteResource extends Resource
 
     public static function canViewAny(): bool
     {
-
-        return Auth::check() && in_array(Auth::user()->role, ['admin', 'operational']);
+        return Auth::check() && in_array(Auth::user()->role, ['operasional_pengiriman']);
     }
 
     public static function shouldRegisterNavigation(): bool
@@ -35,54 +30,82 @@ class RuteResource extends Resource
 
     public static function form(Form $form): Form
     {
-        return $form
-            ->schema([
-                Select::make('customer_id')
-                    ->label('Customer')
-                    ->relationship('customer', 'nama_perusahaan')
-                    ->searchable()
-                    ->preload()
-                    ->required(),
+        return $form->schema([
+            Forms\Components\Select::make('customer_id')
+                ->label('Customer')
+                ->options(function () {
+                    return User::where('role', 'customer')
+                        ->where('status', 'aktif')
+                        ->pluck('name', 'id');
+                })
+                ->searchable()
+                ->preload()
+                ->required(),
 
-                Forms\Components\TextInput::make('nama_rute')->label('Nama Rute')->required(),
-                Forms\Components\TextInput::make('jarak_km')->label('Jarak (km)')->numeric()->required(),
-                Forms\Components\TextInput::make('harga')->label('Harga')->prefix('Rp')->numeric()->required(),
-                Forms\Components\TextInput::make('uang_jalan')->label('Uang Jalan')->prefix('Rp')->numeric()->required(),
-                Forms\Components\TextInput::make('bonus')->label('Bonus')->prefix('Rp')->numeric()->required(),
-            ]);
+            Forms\Components\TextInput::make('nama_rute')
+                ->label('Nama Rute')
+                ->required(),
+
+            Forms\Components\TextInput::make('jarak_km')
+                ->label('Jarak (km)')
+                ->numeric()
+                ->required(),
+
+            Forms\Components\TextInput::make('harga')
+                ->label('Harga/Ton/KM')
+                ->prefix('Rp')
+                ->numeric()
+                ->required(),
+
+            Forms\Components\TextInput::make('uang_jalan')
+                ->label('Uang Jalan')
+                ->prefix('Rp')
+                ->numeric()
+                ->required(),
+
+            Forms\Components\TextInput::make('bonus')
+                ->label('Bonus/Ton')
+                ->prefix('Rp')
+                ->numeric()
+                ->required(),
+        ]);
     }
 
     public static function table(Table $table): Table
     {
-        return $table
-            ->columns([
-                Tables\Columns\TextColumn::make('customer.nama_perusahaan')
-                    ->label('Customer')
-                    ->searchable()
-                    ->sortable(),
+        return $table->columns([
+            Tables\Columns\TextColumn::make('customer.name')
+                ->label('Customer')
+                ->searchable()
+                ->sortable(),
 
-                Tables\Columns\TextColumn::make('nama_rute')->searchable()->sortable(),
-                Tables\Columns\TextColumn::make('jarak_km')->label('Jarak (km)')->sortable(),
-                Tables\Columns\TextColumn::make('harga')->money('IDR', true),
-                Tables\Columns\TextColumn::make('uang_jalan')->money('IDR', true),
-            ])
-            ->filters([])
+            Tables\Columns\TextColumn::make('nama_rute')
+                ->searchable()
+                ->sortable(),
+
+            Tables\Columns\TextColumn::make('jarak_km')
+                ->label('Jarak (km)')
+                ->sortable(),
+
+            Tables\Columns\TextColumn::make('harga')
+                ->money('IDR', true),
+
+            Tables\Columns\TextColumn::make('uang_jalan')
+                ->money('IDR', true),
+        ])
             ->actions([
                 Tables\Actions\EditAction::make()
                     ->visible(
                         fn($record) =>
-                        !in_array($record->status_verifikasi, ['disetujui', 'ditolak']) &&
-                            in_array(auth()->user()->role, ['admin', 'operational'])
+                            in_array(auth()->user()->role, ['operasional_pengiriman'])
                     ),
             ])
-            ->recordUrl(fn($record) => static::getUrl('view', ['record' => $record]))
             ->bulkActions([
                 Tables\Actions\DeleteBulkAction::make()
-                    ->visible(fn() => in_array(Auth::user()?->role, ['admin', 'operational'])),
-
-            ]);
+                    ->visible(fn() => in_array(Auth::user()?->role, ['operasional_pengiriman'])),
+            ])
+            ->recordUrl(fn($record) => static::getUrl('view', ['record' => $record]));
     }
-
 
     public static function getPages(): array
     {
@@ -96,13 +119,12 @@ class RuteResource extends Resource
 
     public static function getRelations(): array
     {
-        return [
-            //
-        ];
+        return [];
     }
-
+    /*
     public static function getNavigationBadge(): ?string
     {
         return (string) Rute::count();
     }
+        */
 }

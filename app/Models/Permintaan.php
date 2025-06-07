@@ -13,11 +13,6 @@ class Permintaan extends Model
 
     protected $guarded = [];
 
-    public function customer()
-    {
-        return $this->belongsTo(Customer::class, 'customer_id');
-    }
-
     protected $casts = [
         'dokumen_pendukung' => 'array',
     ];
@@ -27,9 +22,15 @@ class Permintaan extends Model
         return $this->belongsTo(Rute::class);
     }
 
-    // App\Models\Permintaan.php
-    public function user()
+
+    public function customer()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'customer_id');
+    }
+
+
+    public function jadwalPengiriman()
+    {
+        return $this->hasMany(JadwalPengiriman::class);
     }
 }

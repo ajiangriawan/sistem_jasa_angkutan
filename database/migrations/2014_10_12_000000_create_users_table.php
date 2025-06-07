@@ -17,7 +17,10 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->enum('role', ['admin', 'customer', 'operational', 'driver'])->default('customer');
+            $table->string('telepon')->unique()->nullable();
+            $table->text('alamat')->nullable();
+            $table->enum('role', ['admin_hr', 'admin_direksi', 'operasional_pengiriman', 'operasional_transportasi', 'operasional_bengkel', 'operasional_teknisi', 'operasional_sopir', 'akuntan',  'pemasaran_cs','customer',])->default('customer');
+            $table->enum('status', ['aktif', 'dijadwalkan', 'bertugas', 'tidak aktif',])->default('aktif');
             $table->rememberToken();
             $table->timestamps();
         });

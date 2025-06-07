@@ -1,1 +1,20 @@
 ln -s /home/balinksa/bss/storage/app/public /home/balinksa/public_html/storage
+
+
+role admin_hr = hr@example.com
+role admin_direksi = direksi@example.com
+
+role operasional_transportasi = st@example.com
+role operasional_pengiriman = kp@example.com
+role operasional_bengkel = sb@example.com
+role operasional_teknisi = teknisi@example.com
+role operasional_sopir = sopir@example.com
+role operasional_sopir = sopir1@example.com
+
+role akuntan = akuntan@example.com
+
+role pemasaran_cs = cs@example.com
+
+role customer = stl@example.com
+role customer = ag@example.com
+

@@ -14,7 +14,7 @@ class CreatePermintaan extends CreateRecord
 
     protected function afterCreate(): void
     {
-        $roles = ['admin', 'operational'];
+        $roles = ['pemasaran_cs'];
         $internals = User::whereIn('role', $roles)->get();
 
         $permintaan = $this->record;
@@ -24,7 +24,7 @@ class CreatePermintaan extends CreateRecord
                 ->title('Permintaan Pengiriman Baru')
                 ->success()
                 ->icon('heroicon-o-document-text')
-                ->body("Permintaan pengiriman dari {$permintaan->customer->nama_perusahaan} telah dibuat.")
+                ->body("Permintaan pengiriman dari {$permintaan->customer->name} telah dibuat.")
                 ->actions([
                     Action::make('Lihat')
                         ->url(PermintaanResource::getUrl(name: 'view', parameters: ['record' => $permintaan]))

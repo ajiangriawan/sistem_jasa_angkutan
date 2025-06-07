@@ -10,7 +10,7 @@ use Filament\Resources\Pages\CreateRecord;
 class CreateUser extends CreateRecord
 {
     protected static string $resource = UserResource::class;
-
+/*
     protected function handleRecordCreation(array $data): \Illuminate\Database\Eloquent\Model
     {
         // Ambil data nested dari form
@@ -37,10 +37,10 @@ class CreateUser extends CreateRecord
             Sopir::create([
                 'user_id' => $user->id,
                 'no_sim' => $sopirData['no_sim'] ?? '',
-                'telepon' => $sopirData['telepon'] ?? '',
             ]);
         }
 
         return $user;
     }
+        */
 }

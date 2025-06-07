@@ -9,7 +9,7 @@ use Filament\Resources\Pages\ViewRecord;
 class ViewUser extends ViewRecord
 {
     protected static string $resource = UserResource::class;
-
+/*
     protected function mutateFormDataBeforeFill(array $data): array
     {
         if ($this->record->customer) {
@@ -27,4 +27,5 @@ class ViewUser extends ViewRecord
 
         return $data;
     }
+        */
 }

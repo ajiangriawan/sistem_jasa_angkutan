@@ -23,7 +23,10 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'telepon',
+        'alamat',
         'role',
+        'status'
     ];
 
     /**
@@ -51,12 +54,4 @@ class User extends Authenticatable
         return $this->morphMany(DatabaseNotification::class, 'notifiable')->latest();
     }
 
-    public function customer()
-    {
-        return $this->hasOne(Customer::class);
-    }
-    public function sopir()
-    {
-        return $this->hasOne(Sopir::class);
-    }
 }

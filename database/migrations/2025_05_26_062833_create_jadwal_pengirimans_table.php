@@ -13,33 +13,18 @@ return new class extends Migration
     {
         Schema::create('jadwal_pengirimans', function (Blueprint $table) {
             $table->id();
-
-            // Foreign key ke permintaan pengiriman
-            $table->foreignId('permintaan_id')->constrained('permintaans')->onDelete('cascade');
-
-            // Tanggal dan jam keberangkatan & kedatangan
+            $table->foreignId('permintaan_id')->constrained()->onDelete('cascade');
+            /*
+            $table->foreignId('driver_id')->nullable()->constrained('sopirs');
+            $table->foreignId('kendaraan_id')->nullable()->constrained('kendaraans');
+            */
+            $table->foreignId('pasangan_sopir_kendaraan_id')->nullable()->constrained('pasangan_sopir_kendaraans');
             $table->date('tanggal_berangkat');
             $table->time('jam_berangkat')->nullable();
             $table->date('tanggal_tiba')->nullable();
             $table->time('jam_tiba')->nullable();
-
-            // Sopir dan kendaraan
-            $table->foreignId('driver_id')
-                ->nullable()
-                ->constrained('sopirs')
-                ->onDelete('set null');
-
-            $table->foreignId('kendaraan_id')
-                ->nullable()
-                ->constrained('kendaraans')
-                ->onDelete('set null');
-
-            // Status pengiriman: dijadwalkan, dalam perjalanan, selesai, dibatalkan
-            $table->enum('status', ['dijadwalkan', 'pengambilan', 'pengantaran', 'selesai', 'dibatalkan'])->default('dijadwalkan');
-
-            // Catatan opsional
+            $table->enum('status', ['dijadwalkan', 'Dalam Proses', 'Sebagian Berjalan', 'Belum Ada Detail', 'selesai', 'dibatalkan'])->default('dijadwalkan');
             $table->text('catatan')->nullable();
-
             $table->timestamps();
         });
     }
