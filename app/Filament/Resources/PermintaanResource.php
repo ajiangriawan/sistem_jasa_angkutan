@@ -216,7 +216,7 @@ class PermintaanResource extends Resource
                 Tables\Actions\EditAction::make()
                     ->visible(
                         fn($record) =>
-                        !in_array($record->status_verifikasi, ['disetujui', 'ditolak', 'selesai']) &&
+                        in_array($record->status_verifikasi, ['pending']) &&
                             in_array(auth()->user()->role, ['pemasaran_cs', 'customer'])
                     ),
 

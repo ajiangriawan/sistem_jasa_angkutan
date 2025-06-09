@@ -97,7 +97,7 @@ class RuteResource extends Resource
                 Tables\Actions\EditAction::make()
                     ->visible(
                         fn($record) =>
-                            in_array(auth()->user()->role, ['operasional_pengiriman'])
+                        in_array(auth()->user()->role, ['operasional_pengiriman'])
                     ),
             ])
             ->bulkActions([

@@ -18,3 +18,4 @@ role pemasaran_cs = cs@example.com
 role customer = stl@example.com
 role customer = ag@example.com
 
+php artisan db:seed --class=UserSeeder  
