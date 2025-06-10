@@ -169,6 +169,16 @@ class JadwalCekKendaraanResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->query(function () {
+                $query = JadwalCekKendaraan::query()
+                    ->orderByRaw("
+        FIELD(status, 'terjadwal', 'selesai')
+    ")
+                    ->orderBy('created_at', 'desc');
+
+
+                return $query;
+            })
             ->columns([
                 TextColumn::make('permintaan.laporan.created_at')
                     ->label('Tanggal Laporan')
@@ -273,6 +283,7 @@ class JadwalCekKendaraanResource extends Resource
                         // Ambil laporan kendala yang terkait melalui permintaan
                         $laporan = $record->permintaan?->laporan;
                         $permintaan = $record->permintaan;
+                        $teknisi = $record->teknisi;
 
 
                         if ($laporan) {
@@ -283,6 +294,11 @@ class JadwalCekKendaraanResource extends Resource
                         if ($permintaan) {
                             $permintaan->update([
                                 'status' => 'selesai',
+                            ]);
+                        }
+                        if ($teknisi) {
+                            $teknisi->update([
+                                'status' => 'aktif',
                             ]);
                         }
                     }),

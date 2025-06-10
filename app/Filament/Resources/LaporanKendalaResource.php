@@ -99,6 +99,16 @@ class LaporanKendalaResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->query(function () {
+                $query = LaporanKendala::query()
+                    ->orderByRaw("
+        FIELD(status, 'dilaporkan', 'ditindaklanjuti', 'selesai')
+    ")
+                    ->orderBy('created_at', 'desc');
+
+
+                return $query;
+            })
             ->columns([
                 TextColumn::make('sopir.name')->label('Pelapor')->searchable(),
                 TextColumn::make('kategori')->label('Kategori'),
@@ -235,7 +245,23 @@ class LaporanKendalaResource extends Resource
                         $record->update([
                             'status' => $newStatus,
                         ]);
-                    })
+                    }),
+
+                Action::make('buat_permintaan')
+                    ->label('Cek Kendaraan')
+                    ->icon('heroicon-o-document-plus')
+                    ->color('primary')
+                    ->visible(
+                        fn($record) =>
+                        $record->status === 'ditindaklanjuti' &&
+                            in_array(Auth::user()->role, ['operasional_transportasi'])
+                    )
+                    ->url(
+                        fn($record) =>
+                        PermintaanCekKendaraanResource::getUrl('create', [
+                            'laporan_id' => $record->id
+                        ])
+                    ),
 
             ])
             ->recordUrl(fn($record) => static::getUrl('view', ['record' => $record]))

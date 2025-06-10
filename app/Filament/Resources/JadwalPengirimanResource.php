@@ -24,6 +24,7 @@ use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
+use Filament\Forms\ComponentContainer;
 
 
 class JadwalPengirimanResource extends Resource
@@ -261,45 +262,72 @@ class JadwalPengirimanResource extends Resource
 
                 Action::make('berangkat')
                     ->label('Berangkat')
-                    ->visible(function (JadwalPengiriman $record) use ($currentUser) {
-                        if ($currentUser?->role !== 'operasional_sopir') {
-                            return false;
-                        }
-                        return $record->detailJadwal->where('pasangan.sopir.id', $currentUser->id)
+                    ->visible(function (JadwalPengiriman $record) {
+                        $currentUser = auth()->user();
+                        if ($currentUser?->role !== 'operasional_sopir') return false;
+
+                        return $record->detailJadwal
+                            ->where('pasangan.sopir.id', $currentUser->id)
                             ->where('status', 'dijadwalkan')
                             ->isNotEmpty();
                     })
                     ->requiresConfirmation()
-                    ->action(function (JadwalPengiriman $record) use ($currentUser) {
+                    ->action(function (JadwalPengiriman $record) {
+                        $currentUser = auth()->user();
+
                         if ($currentUser?->role !== 'operasional_sopir') {
-                            Notification::make()->title('Akses Ditolak!')->body('Anda tidak memiliki izin untuk melakukan tindakan ini.')->danger()->send();
+                            Notification::make()
+                                ->title('Akses Ditolak')
+                                ->body('Anda bukan sopir.')
+                                ->danger()
+                                ->send();
                             return;
                         }
 
-                        $detailJadwal = $record->detailJadwal
+                        $detail = $record->detailJadwal
                             ->where('pasangan.sopir.id', $currentUser->id)
                             ->where('status', 'dijadwalkan')
                             ->first();
 
-                        if ($detailJadwal) {
-                            $detailJadwal->update(['status' => 'pengambilan']);
-                            // Panggil metode statis
+                        if ($detail) {
+                            // Update status detail jadwal
+                            $detail->update(['status' => 'pengambilan']);
+
+                            // Update status kendaraan menjadi "beroperasi"
+                            $kendaraan = $detail->pasangan->kendaraan ?? null;
+                            if ($kendaraan) {
+                                $kendaraan->update(['status' => 'beroperasi']);
+                            }
+
+                            // Update status jadwal utama (berdasarkan detail jadwal)
                             static::updateJadwalPengirimanStatus($record);
-                            // Ini mungkin tidak perlu lagi diperbarui di sini, karena status utama akan dihitung dari detail
-                            $record->permintaan?->update(['status_verifikasi' => $record->status]); 
-                            Notification::make()->title('Status pengiriman Anda diubah menjadi "Pengambilan".')->success()->send();
+
+                            // Update status permintaan (opsional)
+                            $record->permintaan?->update(['status_verifikasi' => $record->status]);
+
+                            Notification::make()
+                                ->title('Status Diubah')
+                                ->body('Status diubah menjadi pengambilan. Kendaraan ditandai beroperasi.')
+                                ->success()
+                                ->send();
                         } else {
-                            Notification::make()->title('Tidak ada jadwal yang sesuai untuk diperbarui.')->warning()->send();
+                            Notification::make()
+                                ->title('Gagal')
+                                ->body('Tidak ada jadwal yang dapat diperbarui.')
+                                ->warning()
+                                ->send();
                         }
                     }),
 
+
+                // Action Pengantaran
                 Action::make('pengantaran')
                     ->label('Pengantaran')
-                    ->visible(function (JadwalPengiriman $record) use ($currentUser) {
-                        if ($currentUser?->role !== 'operasional_sopir') {
-                            return false;
-                        }
-                        return $record->detailJadwal->where('pasangan.sopir.id', $currentUser->id)
+                    ->visible(function (JadwalPengiriman $record) {
+                        $currentUser = auth()->user();
+                        if ($currentUser?->role !== 'operasional_sopir') return false;
+                        return $record->detailJadwal
+                            ->where('pasangan.sopir.id', $currentUser->id)
                             ->where('status', 'pengambilan')
                             ->isNotEmpty();
                     })
@@ -312,56 +340,46 @@ class JadwalPengirimanResource extends Resource
                     ->modalSubmitActionLabel('Kirim')
                     ->modalCancelActionLabel('Batal')
                     ->requiresConfirmation()
-                    ->action(function (JadwalPengiriman $record, array $data) use ($currentUser) {
+                    ->action(function (JadwalPengiriman $record, array $data) {
+                        $currentUser = auth()->user();
                         if ($currentUser?->role !== 'operasional_sopir') {
-                            Notification::make()->title('Akses Ditolak!')->body('Anda tidak memiliki izin untuk melakukan tindakan ini.')->danger()->send();
+                            Notification::make()->title('Akses Ditolak')->body('Anda bukan sopir.')->danger()->send();
                             return;
                         }
 
-                        $detailJadwal = $record->detailJadwal
+                        $detail = $record->detailJadwal
                             ->where('pasangan.sopir.id', $currentUser->id)
                             ->where('status', 'pengambilan')
                             ->first();
 
-                        if ($detailJadwal) {
-                            // Cek jika sudah ada entri Pengiriman, jika tidak buat baru
-                            // Atau, jika model Pengiriman hanya untuk agregasi, maka hapus baris ini
-                            // dan langsung update detailJadwal
-                            // Ini adalah bagian yang perlu disesuaikan dengan desain model `Pengiriman` kamu.
-                            // Jika `Pengiriman` adalah untuk menyimpan data seperti tonase, maka ini benar.
-                            // Tapi dokumen `surat_jalan` dan `do_muat` harusnya ke `DetailJadwalPengiriman`.
-
-                            // **PERUBAHAN DI SINI:** Update detailJadwal dengan data dokumen
-                            $detailJadwal->update([
+                        if ($detail) {
+                            $detail->update([
                                 'status' => 'pengantaran',
-                                'surat_jalan' => $data['surat_jalan'], // Simpan di detailJadwal
-                                'do_muat' => $data['do_muat'],       // Simpan di detailJadwal
+                                'surat_jalan' => $data['surat_jalan'],
+                                'do_muat' => $data['do_muat'],
                             ]);
 
-                            // Jika model `Pengiriman` memang untuk mencatat tonase dan catatan, biarkan ini.
-                            // Jika tidak, kamu bisa menghapusnya atau memindahkannya ke DetailJadwalPengiriman
-                            // jika tonase dan catatan per detail.
                             Pengiriman::create([
                                 'jadwal_id' => $record->id,
                                 'tonase' => $data['tonase'],
                                 'tanggal' => now()->toDateString(),
                             ]);
 
-                            // Panggil metode statis
                             static::updateJadwalPengirimanStatus($record);
-                            Notification::make()->title('Data pengantaran berhasil dicatat.')->success()->send();
+                            Notification::make()->title('Pengantaran Berhasil')->body('Data pengantaran dicatat.')->success()->send();
                         } else {
-                            Notification::make()->title('Tidak ada jadwal yang sesuai untuk diperbarui.')->warning()->send();
+                            Notification::make()->title('Gagal')->body('Tidak ada data yang sesuai.')->warning()->send();
                         }
                     }),
 
+                // Action Selesai
                 Action::make('selesai')
                     ->label('Selesai')
-                    ->visible(function (JadwalPengiriman $record) use ($currentUser) {
-                        if ($currentUser?->role !== 'operasional_sopir') {
-                            return false;
-                        }
-                        return $record->detailJadwal->where('pasangan.sopir.id', $currentUser->id)
+                    ->visible(function (JadwalPengiriman $record) {
+                        $currentUser = auth()->user();
+                        if ($currentUser?->role !== 'operasional_sopir') return false;
+                        return $record->detailJadwal
+                            ->where('pasangan.sopir.id', $currentUser->id)
                             ->where('status', 'pengantaran')
                             ->isNotEmpty();
                     })
@@ -370,7 +388,7 @@ class JadwalPengirimanResource extends Resource
                         Forms\Components\Hidden::make('tanggal_tiba'),
                         Forms\Components\Hidden::make('jam_tiba'),
                     ])
-                    ->mountUsing(function (Forms\ComponentContainer $form) {
+                    ->mountUsing(function (ComponentContainer $form) {
                         $now = now()->setTimezone('Asia/Jakarta');
                         $form->fill([
                             'tanggal_tiba' => $now->toDateString(),
@@ -381,40 +399,43 @@ class JadwalPengirimanResource extends Resource
                     ->modalSubmitActionLabel('Selesaikan')
                     ->modalCancelActionLabel('Batal')
                     ->requiresConfirmation()
-                    ->action(function (JadwalPengiriman $record, array $data) use ($currentUser) {
+                    ->action(function (JadwalPengiriman $record, array $data) {
+                        $currentUser = auth()->user();
                         if ($currentUser?->role !== 'operasional_sopir') {
-                            Notification::make()->title('Akses Ditolak!')->body('Anda tidak memiliki izin untuk melakukan tindakan ini.')->danger()->send();
+                            Notification::make()->title('Akses Ditolak')->body('Anda bukan sopir.')->danger()->send();
                             return;
                         }
 
-                        $detailJadwal = $record->detailJadwal
+                        $detail = $record->detailJadwal
                             ->where('pasangan.sopir.id', $currentUser->id)
                             ->where('status', 'pengantaran')
                             ->first();
 
-                        if ($detailJadwal) {
-                            // **PERUBAHAN DI SINI:** Update detailJadwal dengan do_bongkar
-                            $detailJadwal->update([
+                        if ($detail) {
+                            $detail->update([
                                 'status' => 'selesai',
-                                'do_bongkar' => $data['do_bongkar'], // Simpan di detailJadwal
+                                'do_bongkar' => $data['do_bongkar'],
                             ]);
 
+                             // Update status kendaraan menjadi "siap"
+                            $kendaraan = $detail->pasangan->kendaraan ?? null;
+                            if ($kendaraan) {
+                                $kendaraan->update(['status' => 'siap']);
+                            }
 
                             $record->update([
                                 'tanggal_tiba' => $data['tanggal_tiba'],
                                 'jam_tiba' => $data['jam_tiba'],
                             ]);
 
-                            // Panggil metode statis
                             static::updateJadwalPengirimanStatus($record);
-                            // Ini mungkin tidak perlu lagi diperbarui di sini, karena status utama akan dihitung dari detail
                             $record->permintaan?->update(['status_verifikasi' => $record->status]);
-                            Notification::make()->title('Pengiriman Anda berhasil diselesaikan!')->success()->send();
+
+                            Notification::make()->title('Selesai')->body('Pengiriman telah diselesaikan.')->success()->send();
                         } else {
-                            Notification::make()->title('Tidak ada jadwal yang sesuai untuk diperbarui.')->warning()->send();
+                            Notification::make()->title('Gagal')->body('Tidak ada pengantaran aktif.')->warning()->send();
                         }
                     }),
-                    
             ])
             ->recordUrl(fn($record) => static::getUrl('view', ['record' => $record]))
             ->bulkActions([

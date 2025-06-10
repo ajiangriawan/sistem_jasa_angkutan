@@ -19,3 +19,168 @@ role customer = stl@example.com
 role customer = ag@example.com
 
 php artisan db:seed --class=UserSeeder  
+
+        Schema::create('users', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->string('email')->unique();
+            $table->timestamp('email_verified_at')->nullable();
+            $table->string('password');
+            $table->string('telepon')->unique()->nullable();
+            $table->text('alamat')->nullable();
+            $table->enum('role', ['admin_hr', 'admin_direksi', 'operasional_pengiriman', 'operasional_transportasi', 'operasional_bengkel', 'operasional_teknisi', 'operasional_sopir', 'akuntan',  'pemasaran_cs','customer',])->default('customer');
+            $table->enum('status', ['aktif', 'dijadwalkan', 'bertugas', 'tidak aktif',])->default('aktif');
+            $table->rememberToken();
+            $table->timestamps();
+        });
+
+        Schema::create('notifications', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->string('type');
+            $table->morphs('notifiable');
+            $table->text('data');
+            $table->timestamp('read_at')->nullable();
+            $table->timestamps();
+        });
+
+        Schema::create('rutes', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('customer_id')->constrained('users')->onDelete('cascade');
+            $table->string('nama_rute');
+            $table->float('jarak_km');
+            $table->decimal('harga', 12, 2);
+            $table->decimal('uang_jalan', 12, 2);
+            $table->decimal('bonus', 12, 2);
+            $table->timestamps();
+        });
+
+        Schema::create('permintaans', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('customer_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('rute_id')->constrained('rutes')->onDelete('cascade');
+            $table->date('tanggal_permintaan');
+            $table->double('estimasi_tonase', 8, 2); // misalnya max 999999.99
+             $table->integer('jumlah_unit')->default(1); 
+
+            $table->enum('status_verifikasi', ['pending', 'disetujui', 'dijadwalkan', 'Dalam Proses', 'Sebagian Berjalan', 'Belum Ada Detail','selesai', 'ditolak'])
+                ->default('pending');
+
+            $table->json('dokumen_pendukung')->nullable();
+            $table->text('komentar_verifikasi')->nullable();
+
+            $table->timestamps();
+        });
+
+        Schema::create('kendaraans', function (Blueprint $table) {
+            $table->id();
+            $table->string('no_polisi', 15)->unique();
+            $table->string('merk', 20);
+            $table->string('type', 50);
+            $table->string('jenis', 20);
+            $table->year('tahun');
+            $table->string('warna', 20);
+            $table->string('no_rangka', 50)->unique();
+            $table->string('no_mesin', 50)->unique();
+            $table->enum('status', ['siap', 'dijadwalkan', 'beroperasi', 'perbaikan', 'rusak'])->default('siap');
+            $table->timestamps();
+        });
+
+        Schema::create('pasangan_sopir_kendaraans', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('driver_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('kendaraan_id')->constrained()->onDelete('cascade');
+            $table->timestamps();
+
+            $table->unique(['driver_id', 'kendaraan_id']);
+        });
+
+        Schema::create('jadwal_pengirimans', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('permintaan_id')->constrained()->onDelete('cascade');
+            $table->foreignId('pasangan_sopir_kendaraan_id')->nullable()->constrained('pasangan_sopir_kendaraans');
+            $table->date('tanggal_berangkat');
+            $table->time('jam_berangkat')->nullable();
+            $table->date('tanggal_tiba')->nullable();
+            $table->time('jam_tiba')->nullable();
+            $table->enum('status', ['dijadwalkan', 'Dalam Proses', 'Sebagian Berjalan', 'Belum Ada Detail', 'selesai', 'dibatalkan'])->default('dijadwalkan');
+            $table->text('catatan')->nullable();
+            $table->timestamps();
+        });
+
+        Schema::create('detail_jadwal_pengirimans', function (Blueprint $table) {
+            $table->id();
+
+            $table->foreignId('jadwal_pengiriman_id')
+                ->constrained('jadwal_pengirimans')
+                ->onDelete('cascade');
+                
+            $table->json('surat_jalan')->nullable();  
+            $table->json('do_muat')->nullable();         
+            $table->json('do_bongkar')->nullable();     
+
+            $table->foreignId('pasangan_sopir_kendaraan_id')
+                ->constrained('pasangan_sopir_kendaraans')
+                ->onDelete('cascade');
+            $table->enum('status', ['dijadwalkan', 'pengambilan', 'pengantaran', 'selesai', 'dibatalkan'])->default('dijadwalkan');
+
+
+            $table->timestamps();
+        });
+
+        Schema::create('pengirimans', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('jadwal_id')->constrained('jadwal_pengirimans')->onDelete('cascade');
+            $table->decimal('tonase', 8, 2)->nullable();
+            $table->date('tanggal')->nullable();           // tanggal pengiriman
+            $table->text('catatan')->nullable();
+            $table->timestamps();
+        });
+
+        Schema::create('deposits', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade'); // Customer
+            $table->decimal('jumlah', 15, 2);
+            $table->string('bukti_transfer')->nullable(); // path file
+            $table->enum('status', ['menunggu', 'diterima', 'ditolak'])->default('menunggu');
+            $table->text('catatan')->nullable(); // optional untuk akuntan
+            $table->timestamps();
+        });
+
+        Schema::create('laporan_kendalas', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('sopir_id')->constrained('users')->cascadeOnDelete();
+            $table->text('deskripsi');
+            $table->text('alamat');
+            $table->enum('kategori', ['umum', 'kerusakan_kendaraan']);
+            $table->json('foto_kendala')->nullable();
+            $table->enum('status', ['dilaporkan', 'ditindaklanjuti', 'selesai'])->default('dilaporkan');
+            $table->timestamps();
+        });
+
+        Schema::create('permintaan_cek_kendaraans', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('laporan_id')->constrained('laporan_kendalas')->cascadeOnDelete();
+            $table->foreignId('kendaraan_id')->constrained('kendaraans')->OnDelete();
+            $table->foreignId('supervisor_id')->constrained('users')->cascadeOnDelete();
+            $table->enum('status', ['diajukan', 'dikonfirmasi', 'dijadwalkan','selesai'])->default('diajukan');
+            $table->text('catatan')->nullable();
+            $table->timestamps();
+        });
+
+         Schema::create('jadwal_cek_kendaraans', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('permintaan_id')->constrained('permintaan_cek_kendaraans')->cascadeOnDelete();
+            $table->foreignId('teknisi_id')->constrained('users')->cascadeOnDelete();
+            $table->dateTime('jadwal');
+            $table->text('hasil_cek')->nullable();
+            $table->enum('status', ['terjadwal', 'selesai'])->default('terjadwal');
+            $table->timestamps();
+        });
+
+         Schema::create('tindak_lanjut_kendalas', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('laporan_id')->constrained('laporan_kendalas')->cascadeOnDelete();
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->text('catatan');
+            $table->timestamps();
+        });       

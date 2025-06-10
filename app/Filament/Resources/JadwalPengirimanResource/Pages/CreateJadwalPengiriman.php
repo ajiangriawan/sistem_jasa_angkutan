@@ -35,7 +35,7 @@ class CreateJadwalPengiriman extends CreateRecord
             : null;
 
         // =======================
-        // === Notifikasi ke customer ===
+        // === Notifikasi ke Customer ===
         // =======================
         $customerUser = $jadwal->permintaan->customer ?? null;
 
@@ -53,8 +53,13 @@ class CreateJadwalPengiriman extends CreateRecord
                 ->sendToDatabase($customerUser);
         }
 
+        // =======================
+        // === Notifikasi ke Sopir & Update Status ===
+        // =======================
         foreach ($jadwal->detailJadwal as $detail) {
             $sopir = $detail->pasangan->sopir ?? null;
+            $kendaraan = $detail->pasangan->kendaraan ?? null;
+
             if ($sopir) {
                 Notification::make()
                     ->title('Tugas Pengiriman Baru')
@@ -68,19 +73,23 @@ class CreateJadwalPengiriman extends CreateRecord
                     ])
                     ->sendToDatabase($sopir);
 
-                // Ubah status sopir jadi 'dijadwalkan'
                 $sopir->update([
+                    'status' => 'dijadwalkan',
+                ]);
+            }
+
+            if ($kendaraan) {
+                $kendaraan->update([
                     'status' => 'dijadwalkan',
                 ]);
             }
         }
 
+        // =======================
+        // === Update status permintaan ===
+        // =======================
         $jadwal->permintaan->update([
             'status_verifikasi' => 'dijadwalkan',
-        ]);
-
-        $jadwal->kendaraan?->update([
-            'status' => 'dijadwalkan',
         ]);
     }
 }

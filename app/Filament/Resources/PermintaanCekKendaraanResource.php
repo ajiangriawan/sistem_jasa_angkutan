@@ -134,6 +134,16 @@ class PermintaanCekKendaraanResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->query(function () {
+                $query = PermintaanCekKendaraan::query()
+                    ->orderByRaw("
+        FIELD(status, 'diajukan', 'dikonfirmasi', 'dijadwalkan', 'selesai')
+    ")
+                    ->orderBy('created_at', 'desc');
+
+
+                return $query;
+            })
             ->columns([
                 TextColumn::make('laporan.created_at')
                     ->label('Tanggal Laporan')

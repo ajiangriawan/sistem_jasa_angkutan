@@ -10,19 +10,35 @@ use Filament\Notifications\Actions\Action;
 use App\Models\User;
 use App\Models\LaporanKendala;
 use App\Models\PasanganSopirKendaraan;
+use Filament\Forms\Get; // Tambahkan ini untuk akses ke nilai form
 
 class CreatePermintaanCekKendaraan extends CreateRecord
 {
     protected static string $resource = PermintaanCekKendaraanResource::class;
 
+    protected function fillForm(): void
+    {
+        parent::fillForm();
+
+        if (request()->has('laporan_id')) {
+            $this->form->fill([
+                'laporan_id' => request()->get('laporan_id'),
+            ]);
+        }
+    }
+
     protected function mutateFormDataBeforeCreate(array $data): array
     {
+        // Pastikan laporan_id terisi dari request jika ada.
+        // Seharusnya ini sudah ditangani oleh fillForm dan live field,
+        // tapi ini sebagai fallback atau untuk direct submission.
+        if (request()->has('laporan_id')) {
+            $data['laporan_id'] = request()->get('laporan_id');
+        }
 
         $user = auth()->user();
-
         $data['diajukan_oleh'] = $user->id;
 
-        // Jika user adalah supervisor bengkel, isi supervisor_id
         if ($user->role === 'operasional_transportasi') {
             $data['supervisor_id'] = $user->id;
         }
@@ -31,6 +47,21 @@ class CreatePermintaanCekKendaraan extends CreateRecord
         $kendaraanId = PasanganSopirKendaraan::where('driver_id', $laporan->sopir_id)->value('kendaraan_id');
 
         $data['kendaraan_id'] = $kendaraanId;
+        // Jika kendaraanId masih null setelah semua pencarian,
+        // itu berarti ada masalah dan kita harus menghentikan proses atau memberi tahu pengguna.
+        if (is_null($kendaraanId)) {
+            Notification::make()
+                ->title('Gagal Membuat Permintaan')
+                ->danger()
+                ->body('Tidak dapat menemukan kendaraan terkait dengan laporan kendala yang dipilih. Pastikan sopir memiliki pasangan kendaraan yang terdaftar.')
+                ->persistent()
+                ->send();
+
+            // Ini akan menghentikan proses pembuatan record
+            $this->halt();
+        }
+
+        $data['kendaraan_id'] = $kendaraanId; // Set kendaraan_id setelah dipastikan tidak null
 
         return $data;
     }
@@ -40,11 +71,9 @@ class CreatePermintaanCekKendaraan extends CreateRecord
     {
         $permintaan = $this->record;
 
-        // Ambil data laporan kendala
         $laporan = $permintaan->laporan;
-        $sopir = optional($laporan?->sopir); // Gunakan optional() untuk menghindari error jika null
+        $sopir = optional($laporan?->sopir);
 
-        // Kirim notifikasi ke semua supervisor bengkel
         $supervisors = User::where('role', 'operasional_bengkel')->get();
 
         foreach ($supervisors as $user) {

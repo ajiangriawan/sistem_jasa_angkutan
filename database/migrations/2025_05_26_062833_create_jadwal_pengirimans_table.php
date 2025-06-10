@@ -14,10 +14,6 @@ return new class extends Migration
         Schema::create('jadwal_pengirimans', function (Blueprint $table) {
             $table->id();
             $table->foreignId('permintaan_id')->constrained()->onDelete('cascade');
-            /*
-            $table->foreignId('driver_id')->nullable()->constrained('sopirs');
-            $table->foreignId('kendaraan_id')->nullable()->constrained('kendaraans');
-            */
             $table->foreignId('pasangan_sopir_kendaraan_id')->nullable()->constrained('pasangan_sopir_kendaraans');
             $table->date('tanggal_berangkat');
             $table->time('jam_berangkat')->nullable();

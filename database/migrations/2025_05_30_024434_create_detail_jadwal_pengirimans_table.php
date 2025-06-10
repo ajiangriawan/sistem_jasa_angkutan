@@ -11,16 +11,14 @@ return new class extends Migration
         Schema::create('detail_jadwal_pengirimans', function (Blueprint $table) {
             $table->id();
 
-            // merujuk ke jadwal_pengirimans.id
             $table->foreignId('jadwal_pengiriman_id')
                 ->constrained('jadwal_pengirimans')
                 ->onDelete('cascade');
                 
-            $table->json('surat_jalan')->nullable();     // path file
-            $table->json('do_muat')->nullable();         // path file
-            $table->json('do_bongkar')->nullable();      // path file
+            $table->json('surat_jalan')->nullable();  
+            $table->json('do_muat')->nullable();         
+            $table->json('do_bongkar')->nullable();     
 
-            // merujuk ke pasangan_sopir_kendaraans.id
             $table->foreignId('pasangan_sopir_kendaraan_id')
                 ->constrained('pasangan_sopir_kendaraans')
                 ->onDelete('cascade');
