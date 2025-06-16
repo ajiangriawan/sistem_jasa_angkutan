@@ -11,14 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('jadwal_pengirimans', function (Blueprint $table) {
+        Schema::create('invoices', function (Blueprint $table) {
             $table->id();
             $table->foreignId('permintaan_id')->constrained()->onDelete('cascade');
-            $table->time('jam_berangkat')->nullable();
-            $table->date('tanggal_berangkat')->nullable();
-            $table->date('tanggal_tiba')->nullable();
-            $table->time('jam_tiba')->nullable();
-            $table->enum('status', ['dijadwalkan', 'Dalam Proses', 'Sebagian Berjalan', 'Belum Ada Detail', 'selesai', 'dibatalkan'])->default('dijadwalkan');
+            $table->foreignId('customer_id')->constrained('users')->onDelete('cascade');
+            $table->decimal('total_uang_jalan', 15, 2);
+            $table->decimal('sisa_deposit_setelah_invoice', 15, 2)->nullable(); // bisa negatif
+            $table->string('bukti_pembayaran')->nullable(); // upload bukti
+            $table->enum('status', ['lunas'])->default('lunas');
             $table->text('catatan')->nullable();
             $table->timestamps();
         });
@@ -29,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('jadwal_pengirimans');
+        Schema::dropIfExists('invoices');
     }
 };

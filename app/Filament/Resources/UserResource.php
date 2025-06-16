@@ -78,7 +78,18 @@ class UserResource extends Resource
                     'customer' => 'Customer',
                 ])
                 ->required()
-                ->searchable(),
+                ->searchable()
+                ->live(), // Penting agar perubahan bisa dideteksi oleh `->visible()`
+
+            Forms\Components\TextInput::make('bank')
+                ->label('Nama Bank')
+                ->maxLength(100)
+                ->visible(fn(Get $get) => $get('role') === 'operasional_sopir','admin_hr'),
+
+            Forms\Components\TextInput::make('no_rekening')
+                ->label('No Rekening')
+                ->maxLength(100)
+                ->visible(fn(Get $get) => $get('role') === 'operasional_sopir','admin_hr'),
 
             Forms\Components\Select::make('status')
                 ->label('Status')

@@ -43,4 +43,6 @@ class Pengiriman extends Model
     {
         return $this->do_bongkar ? asset('storage/' . $this->do_bongkar) : null;
     }
+
+    
 }

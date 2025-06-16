@@ -165,9 +165,13 @@ class JadwalPengirimanResource extends Resource
             Forms\Components\DatePicker::make('tanggal_berangkat')->required()->label('Tanggal Berangkat'),
             Forms\Components\TimePicker::make('jam_berangkat')->label('Jam Berangkat'),
             Forms\Components\DatePicker::make('tanggal_tiba')->label('Tanggal Tiba')
-                ->visible(fn() => in_array(Auth::user()?->role, ['admin', 'operasional_pengiriman'])),
+                ->visible(function ($get) {
+                    return $get('status') === 'selesai' && in_array(Auth::user()?->role, ['admin', 'operasional_pengiriman']);
+                }),
             Forms\Components\TimePicker::make('jam_tiba')->label('Jam Tiba')
-                ->visible(fn() => in_array(Auth::user()?->role, ['admin', 'operasional_pengiriman'])),
+                ->visible(function ($get) {
+                    return $get('status') === 'selesai' && in_array(Auth::user()?->role, ['admin', 'operasional_pengiriman']);
+                }),
             Forms\Components\Textarea::make('catatan')->label('Catatan'),
             Forms\Components\Repeater::make('detailJadwal')
                 ->label('Pasangan Sopir & Kendaraan')
@@ -378,13 +382,18 @@ class JadwalPengirimanResource extends Resource
                     ->visible(function (JadwalPengiriman $record) {
                         $currentUser = auth()->user();
                         if ($currentUser?->role !== 'operasional_sopir') return false;
+
                         return $record->detailJadwal
                             ->where('pasangan.sopir.id', $currentUser->id)
                             ->where('status', 'pengantaran')
                             ->isNotEmpty();
                     })
                     ->form([
-                        Forms\Components\FileUpload::make('do_bongkar')->required()->label('DO Bongkar')->disk('public')->directory('pengiriman/do-bongkar'),
+                        Forms\Components\FileUpload::make('do_bongkar')
+                            ->required()
+                            ->label('DO Bongkar')
+                            ->disk('public')
+                            ->directory('pengiriman/do-bongkar'),
                         Forms\Components\Hidden::make('tanggal_tiba'),
                         Forms\Components\Hidden::make('jam_tiba'),
                     ])
@@ -401,8 +410,13 @@ class JadwalPengirimanResource extends Resource
                     ->requiresConfirmation()
                     ->action(function (JadwalPengiriman $record, array $data) {
                         $currentUser = auth()->user();
+
                         if ($currentUser?->role !== 'operasional_sopir') {
-                            Notification::make()->title('Akses Ditolak')->body('Anda bukan sopir.')->danger()->send();
+                            Notification::make()
+                                ->title('Akses Ditolak')
+                                ->body('Anda bukan sopir.')
+                                ->danger()
+                                ->send();
                             return;
                         }
 
@@ -417,12 +431,19 @@ class JadwalPengirimanResource extends Resource
                                 'do_bongkar' => $data['do_bongkar'],
                             ]);
 
-                             // Update status kendaraan menjadi "siap"
+                            // ✅ Update kendaraan ke status "siap"
                             $kendaraan = $detail->pasangan->kendaraan ?? null;
                             if ($kendaraan) {
                                 $kendaraan->update(['status' => 'siap']);
                             }
 
+                            // ✅ Update status sopir ke "aktif"
+                            $sopir = $detail->pasangan->sopir ?? null;
+                            if ($sopir) {
+                                $sopir->update(['status' => 'aktif']);
+                            }
+
+                            // ✅ Update tanggal/jam tiba dan status permintaan
                             $record->update([
                                 'tanggal_tiba' => $data['tanggal_tiba'],
                                 'jam_tiba' => $data['jam_tiba'],
@@ -431,11 +452,20 @@ class JadwalPengirimanResource extends Resource
                             static::updateJadwalPengirimanStatus($record);
                             $record->permintaan?->update(['status_verifikasi' => $record->status]);
 
-                            Notification::make()->title('Selesai')->body('Pengiriman telah diselesaikan.')->success()->send();
+                            Notification::make()
+                                ->title('Selesai')
+                                ->body('Pengiriman telah diselesaikan.')
+                                ->success()
+                                ->send();
                         } else {
-                            Notification::make()->title('Gagal')->body('Tidak ada pengantaran aktif.')->warning()->send();
+                            Notification::make()
+                                ->title('Gagal')
+                                ->body('Tidak ada pengantaran aktif.')
+                                ->warning()
+                                ->send();
                         }
                     }),
+
             ])
             ->recordUrl(fn($record) => static::getUrl('view', ['record' => $record]))
             ->bulkActions([

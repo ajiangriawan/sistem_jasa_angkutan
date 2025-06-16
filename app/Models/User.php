@@ -26,6 +26,8 @@ class User extends Authenticatable
         'telepon',
         'alamat',
         'role',
+        'bank',
+        'no_rekening',
         'status'
     ];
 
@@ -54,4 +56,9 @@ class User extends Authenticatable
         return $this->morphMany(DatabaseNotification::class, 'notifiable')->latest();
     }
 
+    // App\Models\User
+    public function deposits()
+    {
+        return $this->hasMany(Deposit::class);
+    }
 }

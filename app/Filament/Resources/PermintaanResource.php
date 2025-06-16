@@ -29,8 +29,9 @@ class PermintaanResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return Auth::check() && in_array(Auth::user()->role, ['operational', 'customer', 'pemasaran_cs', 'operasional_pengiriman']);
+        return Auth::check() && in_array(Auth::user()->role, ['customer', 'pemasaran_cs', 'operasional_pengiriman', 'akuntan']);
     }
+
 
     public static function shouldRegisterNavigation(): bool
     {
@@ -159,20 +160,26 @@ class PermintaanResource extends Resource
             ->query(function () {
                 $query = Permintaan::query()
                     ->orderByRaw("
-                    CASE 
-                        WHEN status_verifikasi = 'selesai' THEN 1
-                        ELSE 0
-                    END ASC
-                ")
+            CASE 
+                WHEN status_verifikasi = 'selesai' THEN 1
+                ELSE 0
+            END ASC
+        ")
                     ->orderBy('tanggal_permintaan', 'desc');
 
-                // Batasi permintaan berdasarkan user jika role-nya customer
-                if (Auth::user()->role === 'customer') {
-                    $query->where('customer_id', Auth::id());
+                $user = Auth::user();
+
+                if ($user->role === 'customer') {
+                    $query->where('customer_id', $user->id);
+                }
+
+                if ($user->role === 'akuntan') {
+                    $query->whereDoesntHave('invoice'); // ✅ hanya tampilkan yang belum punya invoice
                 }
 
                 return $query;
             })
+
             ->columns([
                 Tables\Columns\TextColumn::make('customer.name')
                     ->label('Customer')
@@ -217,7 +224,7 @@ class PermintaanResource extends Resource
                     ->visible(
                         fn($record) =>
                         in_array($record->status_verifikasi, ['pending']) &&
-                            in_array(auth()->user()->role, ['pemasaran_cs', 'customer'])
+                            in_array(auth()->user()->role, ['pemasaran_cs','operasional_pengiriman', 'customer'])
                     ),
 
                 Action::make('preview_files')
@@ -236,7 +243,7 @@ class PermintaanResource extends Resource
                     ->visible(
                         fn($record) =>
                         $record->status_verifikasi === 'pending' &&
-                            in_array(Auth::user()->role, ['pemasaran_cs'])
+                            in_array(Auth::user()->role, ['pemasaran_cs','operasional_pengiriman'])
                     )
                     ->form([
                         Forms\Components\Textarea::make('komentar_verifikasi')
@@ -284,6 +291,22 @@ class PermintaanResource extends Resource
                         ])
                     ),
 
+                Action::make('invoice')
+                    ->label('+ Uang Jalan')
+                    ->icon('heroicon-o-rectangle-stack')
+                    ->color('primary')
+                    ->visible(
+                        fn($record) =>
+                        $record->status_verifikasi === 'selesai' &&
+                            in_array(Auth::user()->role, ['akuntan'])
+                    )
+                    ->url(
+                        fn($record) =>
+                        InvoiceResource::getUrl('create', [
+                            'permintaan_id' => $record->id
+                        ])
+                    ),
+
 
                 Action::make('tolak')
                     ->label('Tolak')
@@ -292,7 +315,7 @@ class PermintaanResource extends Resource
                     ->visible(
                         fn($record) =>
                         $record->status_verifikasi === 'pending'
-                            && in_array(request()->user()->role, ['pemasaran_cs'])
+                            && in_array(request()->user()->role, ['pemasaran_cs','operasional_pengiriman'])
                     )
                     ->form([
                         Forms\Components\Textarea::make('komentar_verifikasi')
@@ -345,14 +368,18 @@ class PermintaanResource extends Resource
     {
         $user = Filament::auth()->user();
 
-        if ($user->role === 'pemasaran_cs') {
-            return (string) Permintaan::where('status_verifikasi', 'pending')->count();
-        }
+        if (!$user) return null;
 
-        if ($user->role === 'operasional_pengiriman') {
-            return (string) Permintaan::where('status_verifikasi', 'disetujui')->count();
-        }
+        return match ($user->role) {
+            'pemasaran_cs', 'operasional_pengiriman' => (string) Permintaan::where('status_verifikasi', 'pending')->count(),
 
-        return null;
+            'operasional_pengiriman' => (string) Permintaan::where('status_verifikasi', 'disetujui')->count(),
+
+            'akuntan' => (string) Permintaan::where('status_verifikasi', 'selesai')
+                ->whereDoesntHave('invoice')
+                ->count(),
+
+            default => null,
+        };
     }
 }

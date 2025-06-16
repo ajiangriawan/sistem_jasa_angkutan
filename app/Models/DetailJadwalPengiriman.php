@@ -38,5 +38,13 @@ class DetailJadwalPengiriman extends Model
         return $this->belongsTo(PasanganSopirKendaraan::class, 'pasangan_sopir_kendaraan_id');
     }
 
-    
+    public function pengirimans()
+    {
+        return $this->hasMany(Pengiriman::class, 'jadwal_id', 'jadwal_pengiriman_id');
+    }
+
+    public function sopir()
+    {
+        return $this->belongsTo(User::class, 'sopir_id');
+    }
 }

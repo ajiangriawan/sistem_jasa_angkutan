@@ -85,7 +85,7 @@ class DepositResource extends Resource
     public static function table(Tables\Table $table): Tables\Table
     {
         return $table->columns([
-            TextColumn::make('user.name')->label('Customer')->searchable(),
+            TextColumn::make('user.name')->label('Customer')->sortable()->searchable(),
             TextColumn::make('jumlah')->money('IDR', true),
             BadgeColumn::make('status')
                 ->color(function (string $state): string {
@@ -95,7 +95,7 @@ class DepositResource extends Resource
                         'ditolak' => 'danger',
                     };
                 }),
-            TextColumn::make('created_at')->label('Tanggal')->dateTime(),
+            TextColumn::make('created_at')->label('Tanggal')->dateTime()->sortable()->searchable(),
         ])
             ->actions([
                 Action::make('preview_files')
