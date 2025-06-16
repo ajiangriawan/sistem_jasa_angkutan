@@ -52,8 +52,6 @@ Route::get('/admin/invoices/print-periode', function () {
 
 Route::get('/invoices/{invoice}/print', [InvoicePrintController::class, 'print'])->name('invoices.print');
 
-
-
 Route::get('/laporan/export', function (\Illuminate\Http\Request $request) {
     $awal = $request->tanggal_awal;
     $akhir = $request->tanggal_akhir;

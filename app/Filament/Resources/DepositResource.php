@@ -84,19 +84,32 @@ class DepositResource extends Resource
 
     public static function table(Tables\Table $table): Tables\Table
     {
-        return $table->columns([
-            TextColumn::make('user.name')->label('Customer')->sortable()->searchable(),
-            TextColumn::make('jumlah')->money('IDR', true),
-            BadgeColumn::make('status')
-                ->color(function (string $state): string {
-                    return match ($state) {
-                        'menunggu' => 'warning',
-                        'diterima' => 'success',
-                        'ditolak' => 'danger',
-                    };
-                }),
-            TextColumn::make('created_at')->label('Tanggal')->dateTime()->sortable()->searchable(),
-        ])
+        return $table
+            ->query(function () {
+                $query = Deposit::query()
+                    ->orderByRaw("
+            CASE 
+                WHEN status= 'menunggu' THEN 1
+                ELSE 0
+            END DESC
+        ")
+                    ->orderBy('created_at', 'desc');
+
+                return $query;
+            })
+            ->columns([
+                TextColumn::make('user.name')->label('Customer')->sortable()->searchable(),
+                TextColumn::make('jumlah')->money('IDR', true),
+                BadgeColumn::make('status')
+                    ->color(function (string $state): string {
+                        return match ($state) {
+                            'menunggu' => 'warning',
+                            'diterima' => 'success',
+                            'ditolak' => 'danger',
+                        };
+                    }),
+                TextColumn::make('created_at')->label('Tanggal')->dateTime()->sortable()->searchable(),
+            ])
             ->actions([
                 Action::make('preview_files')
                     ->label('Bukti Transfer')

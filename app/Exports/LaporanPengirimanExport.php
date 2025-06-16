@@ -19,67 +19,100 @@ class LaporanPengirimanExport implements FromArray, WithHeadings
     }
 
     public function array(): array
-{
-    $rows = [];
+    {
+        $rows = [];
 
-    $permintaans = Permintaan::whereBetween('updated_at', [$this->startDate, $this->endDate])
-        ->where('status_verifikasi', 'selesai')
-        ->with([
-            'rute',
-            'customer',
-            'jadwalPengiriman.detailJadwal.pasangan.sopir',
-            'jadwalPengiriman.detailJadwal.pasangan.kendaraan',
-        ])
-        ->get();
+        // Variabel total untuk setiap kolom numerik
+        $totalTonase = 0;
+        $totalDeposit = 0;
+        $totalUangJalan = 0;
+        $totalBonus = 0;
+        $totalJumlah = 0;
 
-    foreach ($permintaans as $permintaan) {
-        foreach ($permintaan->jadwalPengiriman as $jadwal) {
-            foreach ($jadwal->detailJadwal as $detail) {
-                $sopir = $detail->pasangan->sopir?->name;
-                $unit = $detail->pasangan->kendaraan?->no_polisi;
-                $tonase = $permintaan->pengirimanTonase->sum('tonase') / $jadwal->detailJadwal->count(); // rata-rata
+        $permintaans = Permintaan::whereBetween('updated_at', [$this->startDate, $this->endDate])
+            ->where('status_verifikasi', 'selesai')
+            ->with([
+                'rute',
+                'customer',
+                'pengirimanTonase',
+                'jadwalPengiriman.detailJadwal.pasangan.sopir',
+                'jadwalPengiriman.detailJadwal.pasangan.kendaraan',
+            ])
+            ->get();
 
-                if (!$sopir && !$unit) continue;
-                $customer = $permintaan->customer;
+        foreach ($permintaans as $permintaan) {
+            foreach ($permintaan->jadwalPengiriman as $jadwal) {
+                foreach ($jadwal->detailJadwal as $detail) {
+                    $sopir = $detail->pasangan->sopir?->name;
+                    $unit = $detail->pasangan->kendaraan?->no_polisi;
 
-                $depositAmount = Deposit::where('user_id', $customer?->id)
-                    ->where('status', 'diterima') // sesuaikan dengan status valid di sistemmu
-                    ->latest()
-                    ->value('jumlah') ?? 0;
+                    if (!$sopir && !$unit) {
+                        continue;
+                    }
 
-                $uangJalan = $permintaan->rute->uang_jalan ?? 0;
-                $bonusPerTon = $permintaan->rute->bonus ?? 0;
+                    $tonase = $permintaan->pengirimanTonase->sum('tonase') / $jadwal->detailJadwal->count();
+                    $customer = $permintaan->customer;
 
-                $tonaseLebih = max(0, $tonase - 30);
-                $totalBonus = $tonaseLebih * $bonusPerTon;
-                $jumlah = $depositAmount - ($uangJalan + $totalBonus);
+                    $depositAmount = Deposit::where('user_id', $customer?->id)
+                        ->where('status', 'diterima')
+                        ->latest()
+                        ->value('jumlah') ?? 0;
 
-                $rows[] = [
-                    $permintaan->updated_at->format('d-m-Y'),
-                    $permintaan->rute->nama_rute ?? '-',
-                    $sopir,
-                    $unit,
-                    number_format($tonase, 2, ',', '.'),
-                    'Rp ' . number_format($depositAmount, 0, ',', '.'),
-                    'Rp ' . number_format($uangJalan, 0, ',', '.'),
-                    'Rp ' . number_format($totalBonus, 0, ',', '.'),
-                    'Rp ' . number_format($jumlah, 0, ',', '.'),
-                ];
+                    $uangJalan = $permintaan->rute->uang_jalan ?? 0;
+                    $bonusPerTon = $permintaan->rute->bonus ?? 0;
+
+                    $tonaseLebih = max(0, $tonase - 30);
+                    $totalBonusTonase = $tonaseLebih * $bonusPerTon;
+                    $jumlah = $depositAmount - ($uangJalan + $totalBonusTonase);
+
+                    // Akumulasi total
+                    $totalTonase += $tonase;
+                    $totalDeposit += $depositAmount;
+                    $totalUangJalan += $uangJalan;
+                    $totalBonus += $totalBonusTonase;
+                    $totalJumlah += $jumlah;
+
+                    $rows[] = [
+                        $permintaan->updated_at->format('d-m-Y'),
+                        $customer->name,
+                        $permintaan->rute->nama_rute ?? '-',
+                        $sopir,
+                        $unit,
+                        number_format($tonase, 2, ',', '.'),
+                        'Rp ' . number_format($depositAmount, 0, ',', '.'),
+                        'Rp ' . number_format($uangJalan, 0, ',', '.'),
+                        'Rp ' . number_format($totalBonusTonase, 0, ',', '.'),
+                        'Rp ' . number_format($jumlah, 0, ',', '.'),
+                    ];
+                }
             }
         }
+
+        // Tambah baris total
+        $rows[] = [
+            'TOTAL',
+            '',
+            '',
+            '',
+            '',
+            number_format($totalTonase, 2, ',', '.'),
+            'Rp ' . number_format($totalDeposit, 0, ',', '.'),
+            'Rp ' . number_format($totalUangJalan, 0, ',', '.'),
+            'Rp ' . number_format($totalBonus, 0, ',', '.'),
+            'Rp ' . number_format($totalJumlah, 0, ',', '.'),
+        ];
+
+        return $rows;
     }
-
-    return $rows;
-}
-
 
     public function headings(): array
     {
         return [
-            'Tanggal Selesai',
+            'Tanggal ',
+            'Customer',
             'Rute',
-            'Nama Sopir',
-            'Nomor Plat',
+            'Sopir',
+            'No.Plat',
             'Tonase (Ton)',
             'Deposit',
             'Uang Jalan',

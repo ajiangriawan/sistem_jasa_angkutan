@@ -19,6 +19,7 @@ use Filament\Forms\Get;
 use Filament\Forms\Set;
 use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Placeholder;
+use Filament\Tables\Actions\Action;
 
 class InvoiceResource extends Resource
 {
@@ -216,6 +217,15 @@ class InvoiceResource extends Resource
             ->filters([])
             ->actions([
                 Tables\Actions\EditAction::make(),
+
+                Action::make('preview_files')
+                    ->label('Bukti Transfer')
+                    ->icon('heroicon-o-eye')
+                    ->modalHeading('Preview Bukti')
+                    ->modalContent(fn($record) => view('filament.modals.bukti-viewer', [
+                        'files' => $record->bukti_pembayaran,
+                    ]))
+                    ->visible(fn($record) => !empty($record->bukti_pembayaran)),
             ])
             ->bulkActions([
                 Tables\Actions\DeleteBulkAction::make(),

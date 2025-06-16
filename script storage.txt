@@ -22,8 +22,7 @@ php artisan db:seed --class=UserSeeder
 
 composer require maatwebsite/excel
 
-
-        Schema::create('users', function (Blueprint $table) {
+Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
@@ -32,21 +31,14 @@ composer require maatwebsite/excel
             $table->string('telepon')->unique()->nullable();
             $table->text('alamat')->nullable();
             $table->enum('role', ['admin_hr', 'admin_direksi', 'operasional_pengiriman', 'operasional_transportasi', 'operasional_bengkel', 'operasional_teknisi', 'operasional_sopir', 'akuntan',  'pemasaran_cs','customer',])->default('customer');
+            $table->text('bank')->nullable();
+            $table->text('no_rekening')->nullable();
             $table->enum('status', ['aktif', 'dijadwalkan', 'bertugas', 'tidak aktif',])->default('aktif');
             $table->rememberToken();
             $table->timestamps();
         });
 
-        Schema::create('notifications', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->string('type');
-            $table->morphs('notifiable');
-            $table->text('data');
-            $table->timestamp('read_at')->nullable();
-            $table->timestamps();
-        });
-
-        Schema::create('rutes', function (Blueprint $table) {
+Schema::create('rutes', function (Blueprint $table) {
             $table->id();
             $table->foreignId('customer_id')->constrained('users')->onDelete('cascade');
             $table->string('nama_rute');
@@ -57,7 +49,7 @@ composer require maatwebsite/excel
             $table->timestamps();
         });
 
-        Schema::create('permintaans', function (Blueprint $table) {
+Schema::create('permintaans', function (Blueprint $table) {
             $table->id();
             $table->foreignId('customer_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('rute_id')->constrained('rutes')->onDelete('cascade');
@@ -74,7 +66,7 @@ composer require maatwebsite/excel
             $table->timestamps();
         });
 
-        Schema::create('kendaraans', function (Blueprint $table) {
+Schema::create('kendaraans', function (Blueprint $table) {
             $table->id();
             $table->string('no_polisi', 15)->unique();
             $table->string('merk', 20);
@@ -88,7 +80,7 @@ composer require maatwebsite/excel
             $table->timestamps();
         });
 
-        Schema::create('pasangan_sopir_kendaraans', function (Blueprint $table) {
+Schema::create('pasangan_sopir_kendaraans', function (Blueprint $table) {
             $table->id();
             $table->foreignId('driver_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('kendaraan_id')->constrained()->onDelete('cascade');
@@ -97,12 +89,11 @@ composer require maatwebsite/excel
             $table->unique(['driver_id', 'kendaraan_id']);
         });
 
-        Schema::create('jadwal_pengirimans', function (Blueprint $table) {
+Schema::create('jadwal_pengirimans', function (Blueprint $table) {
             $table->id();
             $table->foreignId('permintaan_id')->constrained()->onDelete('cascade');
-            $table->foreignId('pasangan_sopir_kendaraan_id')->nullable()->constrained('pasangan_sopir_kendaraans');
-            $table->date('tanggal_berangkat');
             $table->time('jam_berangkat')->nullable();
+            $table->date('tanggal_berangkat')->nullable();
             $table->date('tanggal_tiba')->nullable();
             $table->time('jam_tiba')->nullable();
             $table->enum('status', ['dijadwalkan', 'Dalam Proses', 'Sebagian Berjalan', 'Belum Ada Detail', 'selesai', 'dibatalkan'])->default('dijadwalkan');
@@ -110,7 +101,7 @@ composer require maatwebsite/excel
             $table->timestamps();
         });
 
-        Schema::create('detail_jadwal_pengirimans', function (Blueprint $table) {
+Schema::create('detail_jadwal_pengirimans', function (Blueprint $table) {
             $table->id();
 
             $table->foreignId('jadwal_pengiriman_id')
@@ -130,7 +121,7 @@ composer require maatwebsite/excel
             $table->timestamps();
         });
 
-        Schema::create('pengirimans', function (Blueprint $table) {
+Schema::create('pengirimans', function (Blueprint $table) {
             $table->id();
             $table->foreignId('jadwal_id')->constrained('jadwal_pengirimans')->onDelete('cascade');
             $table->decimal('tonase', 8, 2)->nullable();
@@ -139,7 +130,7 @@ composer require maatwebsite/excel
             $table->timestamps();
         });
 
-        Schema::create('deposits', function (Blueprint $table) {
+Schema::create('deposits', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade'); // Customer
             $table->decimal('jumlah', 15, 2);
@@ -149,7 +140,7 @@ composer require maatwebsite/excel
             $table->timestamps();
         });
 
-        Schema::create('laporan_kendalas', function (Blueprint $table) {
+Schema::create('laporan_kendalas', function (Blueprint $table) {
             $table->id();
             $table->foreignId('sopir_id')->constrained('users')->cascadeOnDelete();
             $table->text('deskripsi');
@@ -160,7 +151,7 @@ composer require maatwebsite/excel
             $table->timestamps();
         });
 
-        Schema::create('permintaan_cek_kendaraans', function (Blueprint $table) {
+Schema::create('permintaan_cek_kendaraans', function (Blueprint $table) {
             $table->id();
             $table->foreignId('laporan_id')->constrained('laporan_kendalas')->cascadeOnDelete();
             $table->foreignId('kendaraan_id')->constrained('kendaraans')->OnDelete();
@@ -170,7 +161,7 @@ composer require maatwebsite/excel
             $table->timestamps();
         });
 
-         Schema::create('jadwal_cek_kendaraans', function (Blueprint $table) {
+Schema::create('jadwal_cek_kendaraans', function (Blueprint $table) {
             $table->id();
             $table->foreignId('permintaan_id')->constrained('permintaan_cek_kendaraans')->cascadeOnDelete();
             $table->foreignId('teknisi_id')->constrained('users')->cascadeOnDelete();
@@ -180,10 +171,22 @@ composer require maatwebsite/excel
             $table->timestamps();
         });
 
-         Schema::create('tindak_lanjut_kendalas', function (Blueprint $table) {
+Schema::create('tindak_lanjut_kendalas', function (Blueprint $table) {
             $table->id();
             $table->foreignId('laporan_id')->constrained('laporan_kendalas')->cascadeOnDelete();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->text('catatan');
             $table->timestamps();
-        });       
+        });
+
+Schema::create('invoices', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('permintaan_id')->constrained()->onDelete('cascade');
+            $table->foreignId('customer_id')->constrained('users')->onDelete('cascade');
+            $table->decimal('total_uang_jalan', 15, 2);
+            $table->decimal('sisa_deposit_setelah_invoice', 15, 2)->nullable(); // bisa negatif
+            $table->string('bukti_pembayaran')->nullable(); // upload bukti
+            $table->enum('status', ['lunas'])->default('lunas');
+            $table->text('catatan')->nullable();
+            $table->timestamps();
+        });

@@ -224,7 +224,7 @@ class PermintaanResource extends Resource
                     ->visible(
                         fn($record) =>
                         in_array($record->status_verifikasi, ['pending']) &&
-                            in_array(auth()->user()->role, ['pemasaran_cs','operasional_pengiriman', 'customer'])
+                            in_array(auth()->user()->role, ['pemasaran_cs', 'operasional_pengiriman', 'customer'])
                     ),
 
                 Action::make('preview_files')
@@ -243,7 +243,7 @@ class PermintaanResource extends Resource
                     ->visible(
                         fn($record) =>
                         $record->status_verifikasi === 'pending' &&
-                            in_array(Auth::user()->role, ['pemasaran_cs','operasional_pengiriman'])
+                            in_array(Auth::user()->role, ['pemasaran_cs', 'operasional_pengiriman'])
                     )
                     ->form([
                         Forms\Components\Textarea::make('komentar_verifikasi')
@@ -315,7 +315,7 @@ class PermintaanResource extends Resource
                     ->visible(
                         fn($record) =>
                         $record->status_verifikasi === 'pending'
-                            && in_array(request()->user()->role, ['pemasaran_cs','operasional_pengiriman'])
+                            && in_array(request()->user()->role, ['pemasaran_cs', 'operasional_pengiriman'])
                     )
                     ->form([
                         Forms\Components\Textarea::make('komentar_verifikasi')
@@ -370,16 +370,16 @@ class PermintaanResource extends Resource
 
         if (!$user) return null;
 
-        return match ($user->role) {
-            'pemasaran_cs', 'operasional_pengiriman' => (string) Permintaan::where('status_verifikasi', 'pending')->count(),
+        if (in_array($user->role, ['pemasaran_cs', 'operasional_pengiriman'])) {
+            return (string) Permintaan::whereIn('status_verifikasi', ['pending', 'disetujui'])->count();
+        }
 
-            'operasional_pengiriman' => (string) Permintaan::where('status_verifikasi', 'disetujui')->count(),
-
-            'akuntan' => (string) Permintaan::where('status_verifikasi', 'selesai')
+        if ($user->role === 'akuntan') {
+            return (string) Permintaan::where('status_verifikasi', 'selesai')
                 ->whereDoesntHave('invoice')
-                ->count(),
+                ->count();
+        }
 
-            default => null,
-        };
+        return null;
     }
 }
