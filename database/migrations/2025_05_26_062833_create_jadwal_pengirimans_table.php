@@ -13,12 +13,15 @@ return new class extends Migration
     {
         Schema::create('jadwal_pengirimans', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('permintaan_id')->constrained()->onDelete('cascade');
+            $table->foreignId('permintaan_id')->constrained('permintaans')->onDelete('cascade');
             $table->time('jam_berangkat')->nullable();
             $table->date('tanggal_berangkat')->nullable();
             $table->date('tanggal_tiba')->nullable();
             $table->time('jam_tiba')->nullable();
-            $table->enum('status', ['dijadwalkan', 'Dalam Proses', 'Sebagian Berjalan', 'Belum Ada Detail', 'selesai', 'dibatalkan'])->default('dijadwalkan');
+            $table->enum('status', [
+                'dijadwalkan', 'Dalam Proses', 'Sebagian Berjalan',
+                'Belum Ada Detail', 'selesai', 'dibatalkan'
+            ])->default('dijadwalkan');
             $table->text('catatan')->nullable();
             $table->timestamps();
         });

@@ -367,6 +367,7 @@ class JadwalPengirimanResource extends Resource
                                 'jadwal_id' => $record->id,
                                 'tonase' => $data['tonase'],
                                 'tanggal' => now()->toDateString(),
+                                'user_id' => auth()->id(), // ✅ Tambahkan ini
                             ]);
 
                             static::updateJadwalPengirimanStatus($record);

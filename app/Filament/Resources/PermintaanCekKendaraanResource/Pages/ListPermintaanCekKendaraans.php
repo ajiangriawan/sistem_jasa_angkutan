@@ -5,6 +5,7 @@ namespace App\Filament\Resources\PermintaanCekKendaraanResource\Pages;
 use App\Filament\Resources\PermintaanCekKendaraanResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
+use Illuminate\Support\Facades\Auth;
 
 class ListPermintaanCekKendaraans extends ListRecords
 {
@@ -13,7 +14,8 @@ class ListPermintaanCekKendaraans extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make(),
+            Actions\CreateAction::make()
+                ->visible(fn() => Auth::user()?->role === 'operasional_transportasi'),
         ];
     }
 }

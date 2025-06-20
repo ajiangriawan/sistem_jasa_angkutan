@@ -2,122 +2,166 @@
 
 namespace App\Exports;
 
-use App\Models\Permintaan;
 use App\Models\Deposit;
+use App\Models\Permintaan;
+use Illuminate\Support\Carbon;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 
 class LaporanPengirimanExport implements FromArray, WithHeadings
 {
-    protected string $startDate;
-    protected string $endDate;
+    protected Carbon $startDate;
+    protected Carbon $endDate;
+    protected ?int $customerId = null;
 
-    public function __construct(string $startDate, string $endDate)
+    public function __construct(string $startDate, string $endDate, ?int $customerId = null)
     {
-        $this->startDate = $startDate;
-        $this->endDate = $endDate;
+        $this->startDate = Carbon::parse($startDate)->startOfDay();
+        $this->endDate = Carbon::parse($endDate)->endOfDay();
+        $this->customerId = $customerId;
     }
 
     public function array(): array
     {
         $rows = [];
 
-        // Variabel total untuk setiap kolom numerik
         $totalTonase = 0;
-        $totalDeposit = 0;
-        $totalUangJalan = 0;
+        $totalDebit = 0;
+        $totalKredit = 0;
         $totalBonus = 0;
         $totalJumlah = 0;
 
-        $permintaans = Permintaan::whereBetween('updated_at', [$this->startDate, $this->endDate])
-            ->where('status_verifikasi', 'selesai')
-            ->with([
-                'rute',
-                'customer',
-                'pengirimanTonase',
-                'jadwalPengiriman.detailJadwal.pasangan.sopir',
-                'jadwalPengiriman.detailJadwal.pasangan.kendaraan',
-            ])
+        $deposits = Deposit::with('user')
+            ->whereBetween('created_at', [$this->startDate, $this->endDate])
+            ->when($this->customerId, fn($q) => $q->where('user_id', $this->customerId))
+            ->where('status', 'diterima')
+            ->orderBy('created_at')
             ->get();
 
-        foreach ($permintaans as $permintaan) {
-            foreach ($permintaan->jadwalPengiriman as $jadwal) {
-                foreach ($jadwal->detailJadwal as $detail) {
-                    $sopir = $detail->pasangan->sopir?->name;
-                    $unit = $detail->pasangan->kendaraan?->no_polisi;
+        foreach ($deposits as $deposit) {
+            $date = Carbon::parse($deposit->created_at)->format('d-m-Y');
+            $customer = $deposit->user;
+            $amount = $deposit->jumlah;
 
-                    if (!$sopir && !$unit) {
-                        continue;
-                    }
+            $debit = $amount > 0 ? $amount : 0;
+            $kredit = $amount < 0 ? abs($amount) : 0;
+            $info = $amount > 0 ? 'Deposit dari customer' : 'Pembayaran uang jalan / bonus';
 
-                    $tonase = $permintaan->pengirimanTonase->sum('tonase') / $jadwal->detailJadwal->count();
-                    $customer = $permintaan->customer;
+            $rute = '-';
+            $sopir = '-';
+            $plat = '-';
+            $tonase = '-';
+            $bonus = 0;
 
-                    $depositAmount = Deposit::where('user_id', $customer?->id)
-                        ->where('status', 'diterima')
-                        ->latest()
-                        ->value('jumlah') ?? 0;
+            if ($amount < 0) {
+                $permintaan = Permintaan::where('customer_id', $customer->id)
+                    ->whereDate('updated_at', '<=', $deposit->created_at)
+                    ->latest('updated_at')
+                    ->with([
+                        'rute',
+                        'pengirimanTonase',
+                        'jadwalPengiriman.detailJadwal.pasangan.sopir',
+                        'jadwalPengiriman.detailJadwal.pasangan.kendaraan',
+                    ])
+                    ->first();
 
-                    $uangJalan = $permintaan->rute->uang_jalan ?? 0;
+                if ($permintaan) {
+                    $rute = $permintaan->rute->nama_rute ?? '-';
                     $bonusPerTon = $permintaan->rute->bonus ?? 0;
 
-                    $tonaseLebih = max(0, $tonase - 30);
-                    $totalBonusTonase = $tonaseLebih * $bonusPerTon;
-                    $jumlah = $depositAmount - ($uangJalan + $totalBonusTonase);
+                    $detail = optional($permintaan->jadwalPengiriman->first())->detailJadwal->first();
+                    if ($detail && $detail->pasangan) {
+                        $sopir = $detail->pasangan->sopir->name ?? '-';
+                        $plat = $detail->pasangan->kendaraan->no_polisi ?? '-';
+                    }
 
-                    // Akumulasi total
-                    $totalTonase += $tonase;
-                    $totalDeposit += $depositAmount;
-                    $totalUangJalan += $uangJalan;
-                    $totalBonus += $totalBonusTonase;
-                    $totalJumlah += $jumlah;
+                    $pengirimanList = $permintaan->pengirimanTonase
+                        ->whereBetween('tanggal', [$this->startDate, $this->endDate]);
 
-                    $rows[] = [
-                        $permintaan->updated_at->format('d-m-Y'),
-                        $customer->name,
-                        $permintaan->rute->nama_rute ?? '-',
-                        $sopir,
-                        $unit,
-                        number_format($tonase, 2, ',', '.'),
-                        'Rp ' . number_format($depositAmount, 0, ',', '.'),
-                        'Rp ' . number_format($uangJalan, 0, ',', '.'),
-                        'Rp ' . number_format($totalBonusTonase, 0, ',', '.'),
-                        'Rp ' . number_format($jumlah, 0, ',', '.'),
-                    ];
+                    foreach ($pengirimanList as $pengiriman) {
+                        $tonaseVal = $pengiriman->tonase ?? 0;
+                        $bonusVal = $tonaseVal > 30 ? ($tonaseVal - 30) * $bonusPerTon : 0;
+                        $tanggal = Carbon::parse($pengiriman->tanggal)->format('d-m-Y');
+
+                        $rows[] = [
+                            $tanggal,
+                            $customer->name ?? '-',
+                            'Pembayaran uang jalan / bonus',
+                            $rute,
+                            $sopir,
+                            $plat,
+                            number_format($tonaseVal, 2, ',', '.'),
+                            '',
+                            'Rp ' . number_format($kredit, 0, ',', '.'),
+                            'Rp ' . number_format($bonusVal, 0, ',', '.'),
+                            'Rp ' . number_format($amount, 0, ',', '.'),
+                        ];
+
+                        $totalTonase += $tonaseVal;
+                        $totalKredit += $kredit;
+                        $totalBonus += $bonusVal;
+                        $totalJumlah += $amount;
+                    }
+
+                    continue;
                 }
             }
+
+            // Untuk deposit masuk
+            $rows[] = [
+                $date,
+                $customer->name ?? '-',
+                $info,
+                $rute,
+                $sopir,
+                $plat,
+                $tonase,
+                $debit > 0 ? 'Rp ' . number_format($debit, 0, ',', '.') : '',
+                '',
+                '',
+                'Rp ' . number_format($amount, 0, ',', '.'),
+            ];
+
+            $totalDebit += $debit;
+            $totalJumlah += $amount;
         }
 
-        // Tambah baris total
-        $rows[] = [
-            'TOTAL',
-            '',
-            '',
-            '',
-            '',
-            number_format($totalTonase, 2, ',', '.'),
-            'Rp ' . number_format($totalDeposit, 0, ',', '.'),
-            'Rp ' . number_format($totalUangJalan, 0, ',', '.'),
-            'Rp ' . number_format($totalBonus, 0, ',', '.'),
-            'Rp ' . number_format($totalJumlah, 0, ',', '.'),
-        ];
+        if (!empty($rows)) {
+            $rows[] = [
+                'TOTAL',
+                '',
+                '',
+                '',
+                '',
+                '',
+                number_format($totalTonase, 2, ',', '.'),
+                'Rp ' . number_format($totalDebit, 0, ',', '.'),
+                'Rp ' . number_format($totalKredit, 0, ',', '.'),
+                'Rp ' . number_format($totalBonus, 0, ',', '.'),
+                'Rp ' . number_format($totalJumlah, 0, ',', '.'),
+            ];
+        } else {
+            $rows[] = ['Tidak ada data transaksi pada rentang waktu yang dipilih.'];
+        }
 
         return $rows;
     }
 
+
     public function headings(): array
     {
         return [
-            'Tanggal ',
+            'Tanggal',
             'Customer',
+            'Keterangan',
             'Rute',
             'Sopir',
-            'No.Plat',
+            'No. Plat',
             'Tonase (Ton)',
-            'Deposit',
-            'Uang Jalan',
-            'Bonus Tonase',
-            'Jumlah',
+            'DEBIT (Deposit Masuk)',
+            'KREDIT (Uang Jalan)',
+            'KREDIT (Bonus Tonase)',
+            'Jumlah (Sisa/Minus)',
         ];
     }
 }

@@ -14,8 +14,9 @@ return new class extends Migration
         Schema::create('pengirimans', function (Blueprint $table) {
             $table->id();
             $table->foreignId('jadwal_id')->constrained('jadwal_pengirimans')->onDelete('cascade');
+            $table->foreignId('detail_jadwal_id')->nullable()->constrained('detail_jadwal_pengirimans')->onDelete('set null');
             $table->decimal('tonase', 8, 2)->nullable();
-            $table->date('tanggal')->nullable();           // tanggal pengiriman
+            $table->date('tanggal')->nullable();
             $table->text('catatan')->nullable();
             $table->timestamps();
         });

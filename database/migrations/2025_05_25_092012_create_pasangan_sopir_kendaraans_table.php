@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('pasangan_sopir_kendaraans', function (Blueprint $table) {
             $table->id();
             $table->foreignId('driver_id')->constrained('users')->onDelete('cascade');
-            $table->foreignId('kendaraan_id')->constrained()->onDelete('cascade');
+            $table->foreignId('kendaraan_id')->constrained('kendaraans')->onDelete('cascade');
             $table->timestamps();
 
             $table->unique(['driver_id', 'kendaraan_id']);

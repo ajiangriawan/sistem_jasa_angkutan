@@ -21,6 +21,10 @@ class Invoice extends Model
         'catatan',
     ];
 
+    protected $casts = [
+        'bukti_pembayaran' => 'array',
+    ];
+
     public function permintaan()
     {
         return $this->belongsTo(Permintaan::class);

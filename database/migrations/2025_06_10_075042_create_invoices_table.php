@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('customer_id')->constrained('users')->onDelete('cascade');
             $table->decimal('total_uang_jalan', 15, 2);
             $table->decimal('sisa_deposit_setelah_invoice', 15, 2)->nullable(); // bisa negatif
-            $table->string('bukti_pembayaran')->nullable(); // upload bukti
+            $table->json('bukti_pembayaran')->nullable(); // upload bukti
             $table->enum('status', ['lunas'])->default('lunas');
             $table->text('catatan')->nullable();
             $table->timestamps();

@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use Filament\Pages\Page;
 use Filament\Forms\Form;
 use Filament\Forms;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
@@ -46,6 +47,11 @@ class LaporanPengiriman extends Page implements HasForms
                 Forms\Components\DatePicker::make('tanggal_akhir')
                     ->label('Tanggal Akhir')
                     ->required(),
+                Forms\Components\Select::make('customer_id')
+                    ->label('Pilih Customer')
+                    ->options(User::where('role', 'customer')->pluck('name', 'id'))
+                    ->searchable()
+                    ->nullable(),
             ])
             ->statePath('data');
     }
@@ -73,8 +79,10 @@ class LaporanPengiriman extends Page implements HasForms
                     return route('laporan.export', [
                         'tanggal_awal' => $this->data['tanggal_awal'],
                         'tanggal_akhir' => $this->data['tanggal_akhir'],
+                        'customer_id' => $this->data['customer_id'] ?? null, // Tambahkan ini
                     ]);
                 })
+
                 ->openUrlInNewTab(),
         ];
     }

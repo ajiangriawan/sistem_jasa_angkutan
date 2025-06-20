@@ -44,5 +44,17 @@ class Pengiriman extends Model
         return $this->do_bongkar ? asset('storage/' . $this->do_bongkar) : null;
     }
 
-    
+    public function invoice()
+    {
+        return $this->belongsTo(Invoice::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+    public function detailJadwal()
+    {
+        return $this->belongsTo(DetailJadwalPengiriman::class, 'detail_jadwal_id');
+    }
 }

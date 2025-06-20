@@ -134,10 +134,11 @@ class PermintaanResource extends Resource
                 ->preserveFilenames()
                 ->maxFiles(5)
                 ->maxSize(10240)
-                ->acceptedFileTypes(['application/pdf', 'image/*']),
+                ->acceptedFileTypes(['application/pdf', 'image/*'])
+                ->hidden(),
 
             Forms\Components\Hidden::make('status_verifikasi')
-                ->default('pending'),
+                ->default('menunggu'),
 
             Forms\Components\Textarea::make('komentar_verifikasi')
                 ->label('Komentar Verifikasi')
@@ -206,7 +207,7 @@ class PermintaanResource extends Resource
                     })
                     ->color(function (string $state): string {
                         return match ($state) {
-                            'pending' => 'warning',
+                            'menunggu' => 'warning',
                             'disetujui' => 'primary',
                             'dijadwalkan' => 'gray',
                             'Dalam Proses' => 'info',
@@ -223,7 +224,7 @@ class PermintaanResource extends Resource
                 Tables\Actions\EditAction::make()
                     ->visible(
                         fn($record) =>
-                        in_array($record->status_verifikasi, ['pending']) &&
+                        in_array($record->status_verifikasi, ['menunggu']) &&
                             in_array(auth()->user()->role, ['pemasaran_cs', 'operasional_pengiriman', 'customer'])
                     ),
 
@@ -242,7 +243,7 @@ class PermintaanResource extends Resource
                     ->icon('heroicon-o-check-circle')
                     ->visible(
                         fn($record) =>
-                        $record->status_verifikasi === 'pending' &&
+                        $record->status_verifikasi === 'menunggu' &&
                             in_array(Auth::user()->role, ['pemasaran_cs', 'operasional_pengiriman'])
                     )
                     ->form([
@@ -292,8 +293,8 @@ class PermintaanResource extends Resource
                     ),
 
                 Action::make('invoice')
-                    ->label('+ Uang Jalan')
-                    ->icon('heroicon-o-rectangle-stack')
+                    ->label('Bayar Uang Jalan')
+                    ->icon('heroicon-o-banknotes')
                     ->color('primary')
                     ->visible(
                         fn($record) =>
@@ -314,7 +315,7 @@ class PermintaanResource extends Resource
                     ->icon('heroicon-o-x-circle')
                     ->visible(
                         fn($record) =>
-                        $record->status_verifikasi === 'pending'
+                        $record->status_verifikasi === 'menunggu'
                             && in_array(request()->user()->role, ['pemasaran_cs', 'operasional_pengiriman'])
                     )
                     ->form([
@@ -371,7 +372,7 @@ class PermintaanResource extends Resource
         if (!$user) return null;
 
         if (in_array($user->role, ['pemasaran_cs', 'operasional_pengiriman'])) {
-            return (string) Permintaan::whereIn('status_verifikasi', ['pending', 'disetujui'])->count();
+            return (string) Permintaan::whereIn('status_verifikasi', ['menunggu', 'disetujui'])->count();
         }
 
         if ($user->role === 'akuntan') {

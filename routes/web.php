@@ -52,10 +52,11 @@ Route::get('/admin/invoices/print-periode', function () {
 
 Route::get('/invoices/{invoice}/print', [InvoicePrintController::class, 'print'])->name('invoices.print');
 
-Route::get('/laporan/export', function (\Illuminate\Http\Request $request) {
-    $awal = $request->tanggal_awal;
-    $akhir = $request->tanggal_akhir;
 
-    return Excel::download(new LaporanPengirimanExport($awal, $akhir), 'laporan-pengiriman.xlsx');
+Route::get('/laporan-export', function () {
+    $start = request('tanggal_awal');
+    $end = request('tanggal_akhir');
+    $customerId = request('customer_id');
+
+    return Excel::download(new LaporanPengirimanExport($start, $end, $customerId), 'laporan_pengiriman.xlsx');
 })->name('laporan.export');
-

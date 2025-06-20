@@ -13,11 +13,11 @@ return new class extends Migration
     {
         Schema::create('deposits', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade'); // Customer
-            $table->decimal('jumlah', 15, 2);
-            $table->string('bukti_transfer')->nullable(); // path file
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->decimal('jumlah', 12, 2);
+            $table->string('bukti_transfer', 255)->nullable();
             $table->enum('status', ['menunggu', 'diterima', 'ditolak'])->default('menunggu');
-            $table->text('catatan')->nullable(); // optional untuk akuntan
+            $table->text('catatan')->nullable();
             $table->timestamps();
         });
     }

@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('sopir_id')->constrained('users')->cascadeOnDelete();
             $table->text('deskripsi');
-            $table->text('alamat');
+            $table->string('alamat', 255);
             $table->enum('kategori', ['umum', 'kerusakan_kendaraan']);
             $table->json('foto_kendala')->nullable();
             $table->enum('status', ['dilaporkan', 'ditindaklanjuti', 'selesai'])->default('dilaporkan');

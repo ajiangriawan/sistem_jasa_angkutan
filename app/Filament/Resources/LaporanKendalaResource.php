@@ -138,7 +138,7 @@ class LaporanKendalaResource extends Resource
                     ),
 
                 Action::make('preview_files')
-                    ->label('Dokumen')
+                    ->label('Bukti')
                     ->icon('heroicon-o-eye')
                     ->modalHeading('Preview Bukti')
                     ->modalContent(fn($record) => view('filament.resources.permintaan-resource.preview', [

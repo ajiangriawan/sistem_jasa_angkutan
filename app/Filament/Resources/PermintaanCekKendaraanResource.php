@@ -56,6 +56,17 @@ class PermintaanCekKendaraanResource extends Resource
                             ];
                         });
                 })
+                ->getOptionLabelUsing(function ($value): ?string {
+                    // Ambil record LaporanKendala berdasarkan $value (ID)
+                    $laporanKendala = LaporanKendala::find($value);
+
+                    // Jika record ditemukan, format tampilannya
+                    if ($laporanKendala) {
+                        return optional($laporanKendala->sopir)->name . ' - ' . $laporanKendala->created_at->format('d M Y H:i');
+                    }
+
+                    return null; // Atau string kosong jika record tidak ditemukan
+                })
                 ->searchable()
                 ->required()
                 ->preload()
@@ -176,7 +187,7 @@ class PermintaanCekKendaraanResource extends Resource
                     ),
 
                 Action::make('preview_files')
-                    ->label('Dokumen')
+                    ->label('Bukti')
                     ->icon('heroicon-o-eye')
                     ->modalHeading('Preview Bukti')
                     ->modalContent(fn($record) => view('filament.resources.permintaan-resource.preview', [

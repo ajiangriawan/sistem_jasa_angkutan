@@ -11,18 +11,23 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('users', function (Blueprint $table) {
+         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('email')->unique();
+            $table->string('name', 100);
+            $table->string('email', 100)->unique();
             $table->timestamp('email_verified_at')->nullable();
-            $table->string('password');
-            $table->string('telepon')->unique()->nullable();
-            $table->text('alamat')->nullable();
-            $table->enum('role', ['admin_hr', 'admin_direksi', 'operasional_pengiriman', 'operasional_transportasi', 'operasional_bengkel', 'operasional_teknisi', 'operasional_sopir', 'akuntan',  'pemasaran_cs','customer',])->default('customer');
-            $table->text('bank')->nullable();
-            $table->text('no_rekening')->nullable();
-            $table->enum('status', ['aktif', 'dijadwalkan', 'bertugas', 'tidak aktif',])->default('aktif');
+            $table->string('password', 100);
+            $table->string('telepon', 20)->unique()->nullable();
+            $table->string('alamat', 255)->nullable();
+            $table->enum('role', [
+                'admin_hr', 'admin_direksi', 'operasional_pengiriman',
+                'operasional_transportasi', 'operasional_bengkel',
+                'operasional_teknisi', 'operasional_sopir',
+                'akuntan', 'pemasaran_cs', 'customer'
+            ])->default('customer');
+            $table->string('bank', 50)->nullable();
+            $table->string('no_rekening', 30)->nullable();
+            $table->enum('status', ['aktif', 'dijadwalkan', 'bertugas', 'tidak aktif'])->default('aktif');
             $table->rememberToken();
             $table->timestamps();
         });

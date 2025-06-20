@@ -47,4 +47,8 @@ class DetailJadwalPengiriman extends Model
     {
         return $this->belongsTo(User::class, 'sopir_id');
     }
+    public function pengiriman()
+    {
+        return $this->hasOne(Pengiriman::class, 'detail_jadwal_id');
+    }
 }

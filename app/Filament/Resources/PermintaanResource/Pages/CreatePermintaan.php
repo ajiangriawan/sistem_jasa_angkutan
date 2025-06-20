@@ -14,7 +14,7 @@ class CreatePermintaan extends CreateRecord
 
     protected function afterCreate(): void
     {
-        $roles = ['pemasaran_cs'];
+        $roles = ['operasional_pengiriman'];
         $internals = User::whereIn('role', $roles)->get();
 
         $permintaan = $this->record;
