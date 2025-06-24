@@ -61,4 +61,35 @@ class User extends Authenticatable
     {
         return $this->hasMany(Deposit::class);
     }
+
+    public function pasanganSopir()
+    {
+        return $this->hasMany(PasanganSopirKendaraan::class, 'sopir_id');
+    }
+
+    // 2. Melalui pasangan sopir ke detail jadwal
+    public function detailJadwal()
+    {
+        return $this->hasManyThrough(
+            DetailJadwalPengiriman::class,
+            PasanganSopirKendaraan::class,
+            'sopir_id', // Foreign key di PasanganSopirKendaraan
+            'pasangan_sopir_kendaraan_id', // Foreign key di DetailJadwalPengiriman
+            'id', // Local key di User
+            'id'  // Local key di PasanganSopirKendaraan
+        );
+    }
+
+    // 3. Jadwal pengiriman melalui detail jadwal
+    public function jadwalPengiriman()
+    {
+        return $this->hasManyThrough(
+            JadwalPengiriman::class,
+            DetailJadwalPengiriman::class,
+            'pasangan_sopir_kendaraan_id', // FK ke PasanganSopirKendaraan
+            'id', // FK di JadwalPengiriman (dihubungkan melalui relasi manual)
+            'id', // User.id
+            'jadwal_pengiriman_id' // DetailJadwalPengiriman.jadwal_pengiriman_id
+        );
+    }
 }

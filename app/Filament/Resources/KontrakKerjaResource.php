@@ -17,6 +17,8 @@ use Filament\Forms\Components\FileUpload;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Actions\Action;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 
 class KontrakKerjaResource extends Resource
 {
@@ -24,6 +26,16 @@ class KontrakKerjaResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-clipboard-document';
     protected static ?string $navigationGroup = 'Manajemen Customer';
+
+    public static function canViewAny(): bool
+    {
+        return Auth::check() && in_array(Auth::user()->role, ['operasional_pengiriman', 'admin_hr']);
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return self::canViewAny();
+    }
 
     public static function form(Form $form): Form
     {
@@ -116,5 +128,15 @@ class KontrakKerjaResource extends Resource
             'create' => Pages\CreateKontrakKerja::route('/create'),
             'edit' => Pages\EditKontrakKerja::route('/{record}/edit'),
         ];
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        $user = Auth::user();
+
+        return match ($user->role) {
+            'customer' => parent::getEloquentQuery()->where('customer_id', $user->id),
+            default => parent::getEloquentQuery(),
+        };
     }
 }

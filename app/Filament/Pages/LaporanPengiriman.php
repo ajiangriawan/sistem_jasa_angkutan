@@ -11,10 +11,6 @@ use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
-use Maatwebsite\Excel\Facades\Excel;
-use App\Exports\LaporanPengirimanExport;
-use Filament\Support\Facades\Browser;
-
 
 class LaporanPengiriman extends Page implements HasForms
 {
@@ -47,6 +43,7 @@ class LaporanPengiriman extends Page implements HasForms
                 Forms\Components\DatePicker::make('tanggal_akhir')
                     ->label('Tanggal Akhir')
                     ->required(),
+
                 Forms\Components\Select::make('customer_id')
                     ->label('Pilih Customer')
                     ->options(User::where('role', 'customer')->pluck('name', 'id'))
@@ -56,8 +53,6 @@ class LaporanPengiriman extends Page implements HasForms
             ->statePath('data');
     }
 
-
-
     protected function getHeaderActions(): array
     {
         return [
@@ -65,25 +60,27 @@ class LaporanPengiriman extends Page implements HasForms
                 ->label('Export ke Excel')
                 ->color('success')
                 ->icon('heroicon-o-arrow-down-tray')
-                ->url(function () {
-                    if (empty($this->data['tanggal_awal']) || empty($this->data['tanggal_akhir'])) {
+                ->action(function () {
+                    $state = $this->form->getState();
+
+                    if (empty($state['tanggal_awal']) || empty($state['tanggal_akhir'])) {
                         Notification::make()
                             ->title('Tanggal belum lengkap')
                             ->danger()
                             ->body('Silakan isi tanggal mulai dan tanggal akhir terlebih dahulu.')
                             ->send();
 
-                        return null;
+                        return;
                     }
 
-                    return route('laporan.export', [
-                        'tanggal_awal' => $this->data['tanggal_awal'],
-                        'tanggal_akhir' => $this->data['tanggal_akhir'],
-                        'customer_id' => $this->data['customer_id'] ?? null, // Tambahkan ini
+                    $url = route('laporan.export', [
+                        'tanggal_awal' => $state['tanggal_awal'],
+                        'tanggal_akhir' => $state['tanggal_akhir'],
+                        'customer_id' => $state['customer_id'] ?? null,
                     ]);
-                })
 
-                ->openUrlInNewTab(),
+                    return redirect($url);
+                }),
         ];
     }
 }

@@ -66,4 +66,15 @@ class Kendaraan extends Model
     {
         $this->attributes['no_mesin'] = strtoupper($value);
     }
+    public function laporanKendala()
+    {
+        return $this->hasManyThrough(
+            \App\Models\LaporanKendala::class,
+            \App\Models\PermintaanCekKendaraan::class,
+            'kendaraan_id',       // foreign key di permintaan_cek_kendaraans
+            'id',                 // foreign key di laporan_kendalas
+            'id',                 // local key kendaraan
+            'laporan_id'          // local key permintaan_cek_kendaraans
+        );
+    }
 }

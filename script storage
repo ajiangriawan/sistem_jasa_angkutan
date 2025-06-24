@@ -1,0 +1,710 @@
+
+ln -s /home/balinksa/bss/storage/app/public /home/balinksa/public_html/storage
+
+
+role admin_hr = hr@example.com
+role admin_direksi = direksi@example.com
+
+role operasional_transportasi = st@example.com
+role operasional_pengiriman = kp@example.com
+role operasional_bengkel = sb@example.com
+role operasional_teknisi = teknisi@example.com
+role operasional_sopir = sopir@example.com
+role operasional_sopir = sopir1@example.com
+
+role akuntan = akuntan@example.com
+
+role pemasaran_cs = cs@example.com
+
+role customer = stl@example.com
+role customer = ag@example.com
+
+php artisan db:seed --class=UserSeeder  
+
+buatkan saya kode untuk mermaid live untuk membentuk class diagram. buatkan lengkap dengan Komponen atas
+Komponen ini berisikan nama class. Setiap class pasti memiliki nama yang berbeda-beda, sebutan lain untuk nama ini adalah simple name (nama sederhana).
+
+Komponen tengah
+Komponen ini berisikan atribut dari class, komponen ini digunakan untuk menjelaskan kualitas dari suatu kelas. Atribut ini dapat menjelaskan dapat ditulis lebih detail, dengan cara memasukan tipe nilai.
+
+Komponen bawah
+Komponen ini menyertakan operasi yang ditampilkan dalam bentuk daftar. Operasi ini dapat menggambarkan bagaimana suatu class dapat berinteraksi dengan data.
+
+Schema::create('users', function (Blueprint $table) {
+            $table->id();
+            $table->string('name', 100);
+            $table->string('email', 100)->unique();
+            $table->timestamp('email_verified_at')->nullable();
+            $table->string('password', 100);
+            $table->string('telepon', 20)->unique()->nullable();
+            $table->string('alamat', 255)->nullable();
+            $table->enum('role', [
+                'admin_hr', 'admin_direksi', 'operasional_pengiriman',
+                'operasional_transportasi', 'operasional_bengkel',
+                'operasional_teknisi', 'operasional_sopir',
+                'akuntan', 'pemasaran_cs', 'customer'
+            ])->default('customer');
+            $table->string('bank', 50)->nullable();
+            $table->string('no_rekening', 30)->nullable();
+            $table->enum('status', ['aktif', 'dijadwalkan', 'bertugas', 'tidak aktif'])->default('aktif');
+            $table->rememberToken();
+            $table->timestamps();
+        });
+
+Schema::create('rutes', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('customer_id')->constrained('users')->onDelete('cascade');
+            $table->string('nama_rute', 100);
+            $table->decimal('jarak_km', 8, 2);
+            $table->decimal('harga', 12, 2);
+            $table->decimal('uang_jalan', 12, 2);
+            $table->decimal('bonus', 12, 2);
+            $table->timestamps();
+        });
+
+        Schema::create('permintaans', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('customer_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('rute_id')->constrained('rutes')->onDelete('cascade');
+            $table->date('tanggal_permintaan');
+            $table->decimal('estimasi_tonase', 8, 2);
+            $table->integer('jumlah_unit')->default(1);
+            $table->enum('status_verifikasi', [
+                'menunggu', 'disetujui', 'dijadwalkan', 'Dalam Proses',
+                'Sebagian Berjalan', 'Belum Ada Detail', 'selesai', 'ditolak'
+            ])->default('menunggu');
+            $table->json('dokumen_pendukung')->nullable();
+            $table->text('komentar_verifikasi')->nullable();
+            $table->timestamps();
+        });
+
+Schema::create('kendaraans', function (Blueprint $table) {
+            $table->id();
+            $table->string('no_polisi', 15)->unique();
+            $table->string('merk', 50);
+            $table->string('type', 50);
+            $table->string('jenis', 30);
+            $table->year('tahun');
+            $table->string('warna', 30);
+            $table->string('no_rangka', 50)->unique();
+            $table->string('no_mesin', 50)->unique();
+            $table->enum('status', ['siap', 'dijadwalkan', 'beroperasi', 'perbaikan', 'rusak'])->default('siap');
+            $table->timestamps();
+        });
+
+Schema::create('pasangan_sopir_kendaraans', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('driver_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('kendaraan_id')->constrained('kendaraans')->onDelete('cascade');
+            $table->timestamps();
+
+            $table->unique(['driver_id', 'kendaraan_id']);
+        });
+
+Schema::create('jadwal_pengirimans', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('permintaan_id')->constrained('permintaans')->onDelete('cascade');
+            $table->time('jam_berangkat')->nullable();
+            $table->date('tanggal_berangkat')->nullable();
+            $table->date('tanggal_tiba')->nullable();
+            $table->time('jam_tiba')->nullable();
+            $table->enum('status', [
+                'dijadwalkan', 'Dalam Proses', 'Sebagian Berjalan',
+                'Belum Ada Detail', 'selesai', 'dibatalkan'
+            ])->default('dijadwalkan');
+            $table->text('catatan')->nullable();
+            $table->timestamps();
+        });
+
+Schema::create('detail_jadwal_pengirimans', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('jadwal_pengiriman_id')->constrained('jadwal_pengirimans')->onDelete('cascade');
+            $table->json('surat_jalan')->nullable();
+            $table->json('do_muat')->nullable();
+            $table->json('do_bongkar')->nullable();
+            $table->foreignId('pasangan_sopir_kendaraan_id')->constrained('pasangan_sopir_kendaraans')->onDelete('cascade');
+            $table->enum('status', ['dijadwalkan', 'pengambilan', 'pengantaran', 'selesai', 'dibatalkan'])->default('dijadwalkan');
+            $table->timestamps();
+        });
+
+Schema::create('pengirimans', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('jadwal_id')->constrained('jadwal_pengirimans')->onDelete('cascade');
+            $table->foreignId('detail_jadwal_id')->nullable()->constrained('detail_jadwal_pengirimans')->onDelete('set null');
+            $table->decimal('tonase', 8, 2)->nullable();
+            $table->date('tanggal')->nullable();
+            $table->text('catatan')->nullable();
+            $table->timestamps();
+        });
+    
+
+Schema::create('deposits', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->decimal('jumlah', 12, 2);
+            $table->string('bukti_transfer', 255)->nullable();
+            $table->enum('status', ['menunggu', 'diterima', 'ditolak'])->default('menunggu');
+            $table->text('catatan')->nullable();
+            $table->timestamps();
+        });
+
+Schema::create('laporan_kendalas', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('sopir_id')->constrained('users')->cascadeOnDelete();
+            $table->text('deskripsi');
+            $table->string('alamat', 255);
+            $table->enum('kategori', ['umum', 'kerusakan_kendaraan']);
+            $table->json('foto_kendala')->nullable();
+            $table->enum('status', ['dilaporkan', 'ditindaklanjuti', 'selesai'])->default('dilaporkan');
+            $table->timestamps();
+        });
+
+Schema::create('permintaan_cek_kendaraans', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('laporan_id')->constrained('laporan_kendalas')->cascadeOnDelete();
+            $table->foreignId('kendaraan_id')->constrained('kendaraans')->onDelete('cascade');
+            $table->foreignId('supervisor_id')->constrained('users')->cascadeOnDelete();
+            $table->enum('status', ['diajukan', 'dikonfirmasi', 'dijadwalkan', 'selesai'])->default('diajukan');
+            $table->text('catatan')->nullable();
+            $table->timestamps();
+        });
+
+Schema::create('jadwal_cek_kendaraans', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('permintaan_id')->constrained('permintaan_cek_kendaraans')->cascadeOnDelete();
+            $table->foreignId('teknisi_id')->constrained('users')->cascadeOnDelete();
+            $table->dateTime('jadwal');
+            $table->text('hasil_cek')->nullable();
+            $table->enum('status', ['terjadwal', 'selesai'])->default('terjadwal');
+            $table->timestamps();
+        });
+
+Schema::create('tindak_lanjut_kendalas', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('laporan_id')->constrained('laporan_kendalas')->cascadeOnDelete();
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->text('catatan');
+            $table->timestamps();
+        });
+
+Schema::create('invoices', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('permintaan_id')->constrained()->onDelete('cascade');
+            $table->foreignId('customer_id')->constrained('users')->onDelete('cascade');
+            $table->decimal('total_uang_jalan', 15, 2);
+            $table->decimal('sisa_deposit_setelah_invoice', 15, 2)->nullable(); // bisa negatif
+            $table->json('bukti_pembayaran')->nullable(); // upload bukti
+            $table->enum('status', ['lunas'])->default('lunas');
+            $table->text('catatan')->nullable();
+            $table->timestamps();
+        });
+
+Schema::create('kontrak_kerjas', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('customer_id')->constrained('users')->onDelete('cascade');
+            $table->date('tanggal_mulai');
+            $table->date('tanggal_akhir');
+            $table->enum('status', ['aktif', 'tidak aktif'])->default('aktif');
+            $table->json('files')->nullable();
+            $table->timestamps();
+        });
+
+
+classDiagram
+%% ===============================
+%% KOMPONEN ATAS: NAMA CLASS
+%% KOMPONEN TENGAH: ATRIBUT
+%% KOMPONEN BAWAH: OPERASI
+%% ===============================
+
+class User {
+    +bigint id
+    +string name
+    +string email
+    +string telepon
+    +text alamat
+    +enum role
+    +text bank
+    +text no_rekening
+    +enum status
+    +timestamp email_verified_at
+    +string password
+    +rememberToken
+    +timestamps
+
+    +login()
+    +register()
+    +getRole()
+}
+
+class Rute {
+    +bigint id
+    +bigint customer_id
+    +string nama_rute
+    +float jarak_km
+    +decimal harga
+    +decimal uang_jalan
+    +decimal bonus
+    +timestamps
+
+    +getHargaPerKm()
+    +updateRute()
+}
+
+class Permintaan {
+    +bigint id
+    +bigint customer_id
+    +bigint rute_id
+    +date tanggal_permintaan
+    +double estimasi_tonase
+    +integer jumlah_unit
+    +enum status_verifikasi
+    +json dokumen_pendukung
+    +text komentar_verifikasi
+    +timestamps
+
+    +verifikasi()
+    +ajukanPermintaan()
+}
+
+class Kendaraan {
+    +bigint id
+    +string no_polisi
+    +string merk
+    +string type
+    +string jenis
+    +year tahun
+    +string warna
+    +string no_rangka
+    +string no_mesin
+    +enum status
+    +timestamps
+
+    +updateStatus()
+    +jadwalkanPerbaikan()
+}
+
+class PasanganSopirKendaraan {
+    +bigint id
+    +bigint driver_id
+    +bigint kendaraan_id
+    +timestamps
+
+    +assignPasangan()
+}
+
+class JadwalPengiriman {
+    +bigint id
+    +bigint permintaan_id
+    +time jam_berangkat
+    +date tanggal_berangkat
+    +date tanggal_tiba
+    +time jam_tiba
+    +enum status
+    +text catatan
+    +timestamps
+
+    +aturJadwal()
+    +ubahStatus()
+}
+
+class DetailJadwalPengiriman {
+    +bigint id
+    +bigint jadwal_pengiriman_id
+    +json surat_jalan
+    +json do_muat
+    +json do_bongkar
+    +bigint pasangan_sopir_kendaraan_id
+    +enum status
+    +timestamps
+
+    +updateDokumen()
+    +selesaikanPengiriman()
+}
+
+class Pengiriman {
+    +bigint id
+    +bigint jadwal_id
+    +decimal tonase
+    +date tanggal
+    +text catatan
+    +timestamps
+
+    +inputTonase()
+}
+
+class Deposit {
+    +bigint id
+    +bigint user_id
+    +decimal jumlah
+    +string bukti_transfer
+    +enum status
+    +text catatan
+    +timestamps
+
+    +konfirmasiDeposit()
+    +tolakDeposit()
+}
+
+class Invoice {
+    +bigint id
+    +bigint permintaan_id
+    +bigint customer_id
+    +decimal total_uang_jalan
+    +decimal sisa_deposit_setelah_invoice
+    +string bukti_pembayaran
+    +enum status
+    +text catatan
+    +timestamps
+
+    +generate()
+    +verifikasiPembayaran()
+}
+
+class LaporanKendala {
+    +bigint id
+    +bigint sopir_id
+    +text deskripsi
+    +text alamat
+    +enum kategori
+    +json foto_kendala
+    +enum status
+    +timestamps
+
+    +buatLaporan()
+    +ubahStatus()
+}
+
+class PermintaanCekKendaraan {
+    +bigint id
+    +bigint laporan_id
+    +bigint kendaraan_id
+    +bigint supervisor_id
+    +enum status
+    +text catatan
+    +timestamps
+
+    +konfirmasiPermintaan()
+    +jadwalkanCek()
+}
+
+class JadwalCekKendaraan {
+    +bigint id
+    +bigint permintaan_id
+    +bigint teknisi_id
+    +datetime jadwal
+    +text hasil_cek
+    +enum status
+    +timestamps
+
+    +isiHasilCek()
+    +selesaikanJadwal()
+}
+
+class TindakLanjutKendala {
+    +bigint id
+    +bigint laporan_id
+    +bigint user_id
+    +text catatan
+    +timestamps
+
+    +beriTanggapan()
+}
+
+class KontrakKerja {
+    +bigint id
+    +bigint customer_id
+    +date tanggal_mulai
+    +date tanggal_akhir
+    +enum status
+    +json files
+    +timestamps
+
+    +aktifkan()
+    +nonaktifkan()
+    +unggahFile()
+}
+
+%% ===============================
+%% RELASI ANTAR KELAS
+%% ===============================
+User "1" --> "*" Rute : customer_id
+User "1" --> "*" Permintaan : customer_id
+User "1" --> "*" Deposit : user_id
+User "1" --> "*" PasanganSopirKendaraan : driver_id
+User "1" --> "*" LaporanKendala : sopir_id
+User "1" --> "*" PermintaanCekKendaraan : supervisor_id
+User "1" --> "*" JadwalCekKendaraan : teknisi_id
+User "1" --> "*" TindakLanjutKendala : user_id
+User "1" --> "*" Invoice : customer_id
+User "1" --> "*" KontrakKerja : customer_id
+
+Permintaan "1" --> "*" JadwalPengiriman : permintaan_id
+Permintaan "1" --> "*" Invoice : permintaan_id
+Permintaan "1" --> "1" Rute : rute_id
+
+Kendaraan "1" --> "*" PasanganSopirKendaraan : kendaraan_id
+Kendaraan "1" --> "*" PermintaanCekKendaraan : kendaraan_id
+
+PasanganSopirKendaraan "1" --> "*" DetailJadwalPengiriman : pasangan_sopir_kendaraan_id
+
+JadwalPengiriman "1" --> "*" DetailJadwalPengiriman : jadwal_pengiriman_id
+JadwalPengiriman "1" --> "*" Pengiriman : jadwal_id
+
+LaporanKendala "1" --> "*" PermintaanCekKendaraan : laporan_id
+LaporanKendala "1" --> "*" TindakLanjutKendala : laporan_id
+
+PermintaanCekKendaraan "1" --> "*" JadwalCekKendaraan : permintaan_id
+
+
+<?php
+
+namespace App\Filament\Resources;
+
+use App\Filament\Resources\InvoiceResource\Pages;
+use App\Models\Invoice;
+use App\Models\Permintaan;
+use App\Models\Deposit;
+use App\Models\User;
+use Filament\Forms;
+use Filament\Forms\Form;
+use Filament\Resources\Resource;
+use Filament\Tables;
+use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Carbon;
+use Filament\Forms\Get;
+use Filament\Forms\Set;
+use Filament\Forms\Components\Grid;
+use Filament\Forms\Components\Placeholder;
+
+class InvoiceResource extends Resource
+{
+    protected static ?string $model = Invoice::class;
+
+    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+
+    protected static ?string $navigationGroup = 'Keuangan';
+    protected static ?string $navigationLabel = 'Invoice Pengiriman';
+    protected static ?string $modelLabel = 'Invoice';
+
+    public static function canViewAny(): bool
+    {
+        return Auth::check() && in_array(Auth::user()->role, ['akuntan']);
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return self::canViewAny();
+    }
+
+    public static function canCreate(): bool
+    {
+        return Auth::check() && Auth::user()->role === 'akuntan';
+    }
+
+    public static function canEdit($record): bool
+    {
+        return Auth::check() && Auth::user()->role === 'akuntan';
+    }
+
+    public static function canDelete($record): bool
+    {
+        return Auth::check() && Auth::user()->role === 'akuntan';
+    }
+
+    public static function form(Form $form): Form
+    {
+        return $form->schema([
+            Forms\Components\Select::make('permintaan_id')
+                ->label('Permintaan Pengiriman')
+                ->default(fn() => request()->get('permintaan_id')) // <-- Ini penting
+                ->options(function (Forms\Get $get) {
+                    $selectedId = $get('permintaan_id');
+                    $today = Carbon::today();
+
+                    $permintaanQuery = Permintaan::query()
+                        ->where('status_verifikasi', 'selesai')
+                        ->whereDoesntHave('invoice')
+                        ->with(['customer', 'rute']);
+
+                    if ($selectedId) {
+                        $permintaanQuery->orWhere('id', $selectedId); // biar tetap muncul
+                    }
+
+                    return $permintaanQuery->get()->mapWithKeys(function ($p) {
+                        $label = "{$p->customer->name} - {$p->rute->nama_rute} - " . Carbon::parse($p->tanggal_permintaan)->format('d-m-Y');
+                        return [$p->id => $label];
+                    })->toArray();
+                })
+                ->searchable()
+                ->required()
+                ->reactive()
+                ->afterStateUpdated(function ($state, Set $set) {
+                    $permintaan = Permintaan::with([
+                        'rute',
+                        'jadwalPengiriman.detailJadwal.pasangan.sopir'
+                    ])->find($state);
+
+                    $uangJalan = $permintaan?->rute?->uang_jalan ?? 0;
+                    $jumlahUnitTerkirim = $permintaan?->jadwalPengiriman
+                        ?->flatMap(fn($jadwal) => $jadwal->detailJadwal)->count() ?? 0;
+
+                    $total = $uangJalan * $jumlahUnitTerkirim;
+
+                    $set('total_uang_jalan', $total);
+                    $set('customer_id', $permintaan?->customer_id);
+                }),
+
+            Forms\Components\Hidden::make('customer_id')
+                ->default(function () {
+                    $permintaan = \App\Models\Permintaan::find(request()->get('permintaan_id'));
+                    return $permintaan?->customer_id;
+                }),
+
+            // Rincian Sopir
+            Forms\Components\Group::make([
+                Forms\Components\Fieldset::make('Rincian Sopir dan Uang Jalan')
+                    ->visible(fn(Get $get) => !empty($get('permintaan_id')))
+                    ->schema(function (Get $get) {
+                        $permintaan = Permintaan::with([
+                            'jadwalPengiriman.detailJadwal.pasangan.sopir',
+                            'rute'
+                        ])->find($get('permintaan_id'));
+
+                        if (!$permintaan) {
+                            return [
+                                Forms\Components\Placeholder::make('no_request')
+                                    ->label('')
+                                    ->content('Pilih permintaan terlebih dahulu.')
+                            ];
+                        }
+
+                        $uangJalan = $permintaan->rute->uang_jalan ?? 0;
+
+                        $sopirList = collect();
+
+                        foreach ($permintaan->jadwalPengiriman as $jadwal) {
+                            foreach ($jadwal->detailJadwal as $detail) {
+                                $sopir = $detail->pasangan->sopir ?? null;
+                                if ($sopir) {
+                                    $sopirList->push($sopir);
+                                }
+                            }
+                        }
+
+                        if ($sopirList->isEmpty()) {
+                            return [
+                                Forms\Components\Placeholder::make('no_drivers')
+                                    ->label('')
+                                    ->content('Tidak ada sopir yang dijadwalkan.')
+                                    ->columnSpanFull()
+                            ];
+                        }
+
+                        return $sopirList->unique('id')->map(function ($sopir) use ($uangJalan) {
+                            return Grid::make(2)->schema([
+                                Placeholder::make('nama')
+                                    ->label('Nama Sopir')
+                                    ->content($sopir->name),
+                                Placeholder::make('bank')
+                                    ->label('Bank')
+                                    ->content($sopir->bank),
+                                Placeholder::make('no_rekening')
+                                    ->label('No Rekening')
+                                    ->content($sopir->no_rekening),
+                                Placeholder::make('uang_jalan')
+                                    ->label('Uang Jalan')
+                                    ->content('Rp ' . number_format((float) $uangJalan, 0, ',', '.')),
+                            ])->columns(2);
+                        })->toArray();
+                    })
+                    ->columns(1)
+                    ->reactive()
+            ]),
+
+            Forms\Components\TextInput::make('total_uang_jalan')
+                ->label('Total Uang Jalan')
+                ->readOnly()
+                ->prefix('Rp')
+                ->formatStateUsing(fn($state) => number_format((int) $state, 0, ',', '.'))
+                ->default(function () {
+                    $permintaan = \App\Models\Permintaan::with('rute', 'jadwalPengiriman.detailJadwal')->find(request()->get('permintaan_id'));
+                    if (!$permintaan) return 0;
+
+                    $uangJalan = $permintaan->rute->uang_jalan ?? 0;
+                    $jumlah = $permintaan->jadwalPengiriman?->flatMap(fn($j) => $j->detailJadwal)->count() ?? 0;
+
+                    return $uangJalan * $jumlah;
+                }),
+
+            Forms\Components\FileUpload::make('bukti_pembayaran')
+                ->label('Bukti Pembayaran')
+                ->directory('bukti-invoice')
+                ->acceptedFileTypes(['image/*', 'application/pdf'])
+                ->maxSize(5120),
+
+            Forms\Components\Textarea::make('catatan')
+                ->label('Catatan Tambahan')
+                ->nullable()
+                ->rows(3),
+        ])->columns(2);
+    }
+
+
+    public static function table(Table $table): Table
+    {
+        return $table
+            ->columns([
+                Tables\Columns\TextColumn::make('id')->label('No. Invoice')->sortable(),
+                //Tables\Columns\TextColumn::make('permintaan.id')->label('ID Permintaan'),
+                Tables\Columns\TextColumn::make('customer.name')->label('Customer')->sortable()->searchable(),
+                Tables\Columns\TextColumn::make('permintaan.rute.nama_rute')->label('Nama Rute')->sortable()->searchable(),
+                Tables\Columns\TextColumn::make('total_uang_jalan')->money('IDR'),
+                Tables\Columns\TextColumn::make('sisa_deposit_setelah_invoice')->label('Sisa Deposit')->money('IDR'),
+                Tables\Columns\BadgeColumn::make('status')
+                    ->colors([
+                        'secondary' => 'menunggu_persetujuan',
+                        'success' => 'disetujui',
+                        'danger' => 'ditolak',
+                    ])
+                    ->label('Status'),
+                Tables\Columns\TextColumn::make('created_at')->label('Tanggal')->dateTime('d M Y'),
+            ])
+            ->filters([])
+            ->actions([
+                Tables\Actions\EditAction::make(),
+            ])
+            ->bulkActions([
+                Tables\Actions\DeleteBulkAction::make(),
+            ]);
+    }
+
+    public static function getRelations(): array
+    {
+        return [];
+    }
+
+    public static function getPages(): array
+    {
+        return [
+            'index' => Pages\ListInvoices::route('/'),
+            'create' => Pages\CreateInvoice::route('/create'),
+            'edit' => Pages\EditInvoice::route('/{record}/edit'),
+            'cetak-periode' => Pages\CetakInvoicePeriode::route('/cetak-periode'),
+
+        ];
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        $user = Auth::user();
+
+        if ($user && $user->role === 'customer') {
+            return parent::getEloquentQuery()->where('customer_id', $user->id);
+        }
+
+        return parent::getEloquentQuery();
+    }
+}

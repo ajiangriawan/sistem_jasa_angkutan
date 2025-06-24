@@ -109,9 +109,8 @@ class InvoiceResource extends Resource
                     ->visible(fn(Get $get) => filled($get('permintaan_id')))
                     ->schema(function (Get $get) {
                         $permintaan = Permintaan::with([
+                            'rute',
                             'jadwalPengiriman.detailJadwal.pasangan.sopir',
-                            'jadwalPengiriman.detailJadwal.pengiriman',
-                            'rute'
                         ])->find($get('permintaan_id'));
 
                         if (!$permintaan) {
@@ -122,11 +121,16 @@ class InvoiceResource extends Resource
                         $bonusPerTon = $permintaan->rute->bonus ?? 0;
 
                         $grouped = collect();
+
                         foreach ($permintaan->jadwalPengiriman as $jadwal) {
                             foreach ($jadwal->detailJadwal as $detail) {
-                                $sopir = $detail->pasangan->sopir;
+                                $sopir = optional(optional($detail->pasangan)->sopir);
+
                                 $pengiriman = $detail->pengiriman;
-                                if (!$sopir || !$pengiriman) continue;
+
+                                if (!$sopir->id || !$pengiriman?->tanggal) {
+                                    continue;
+                                }
 
                                 $grouped->push([
                                     'sopir_id' => $sopir->id,
@@ -134,13 +138,13 @@ class InvoiceResource extends Resource
                                     'bank' => $sopir->bank,
                                     'rekening' => $sopir->no_rekening,
                                     'tanggal' => $pengiriman->tanggal,
-                                    'tonase' => $pengiriman->tonase,
+                                    'tonase' => $pengiriman->tonase ?? 0,
                                 ]);
                             }
                         }
 
                         if ($grouped->isEmpty()) {
-                            return [Placeholder::make('no_drivers')->content('Tidak ada data sopir atau pengiriman.')];
+                            return [Placeholder::make('no_data')->content('Tidak ada data sopir atau pengiriman yang valid.')];
                         }
 
                         $schemas = [];
@@ -166,7 +170,7 @@ class InvoiceResource extends Resource
                                                 ->label('Uang Jalan')
                                                 ->content('Rp ' . number_format($uangJalan, 0, ',', '.')),
                                             Placeholder::make('bonus')
-                                                ->label('Bonus')
+                                                ->label('Bonus (jika tonase > 30)')
                                                 ->content('Rp ' . number_format($bonus, 0, ',', '.')),
                                             Placeholder::make('total')
                                                 ->label('Total')
@@ -245,7 +249,7 @@ class InvoiceResource extends Resource
                 Tables\Columns\TextColumn::make('created_at')->label('Tanggal')->dateTime('d M Y'),
             ])
             ->actions([
-                //Tables\Actions\EditAction::make(),
+                Tables\Actions\EditAction::make(),
                 Action::make('preview_files')
                     ->label('Bukti Transfer')
                     ->icon('heroicon-o-eye')
@@ -253,7 +257,6 @@ class InvoiceResource extends Resource
                     ->modalContent(fn($record) => view('filament.modals.bukti-viewer', ['files' => $record->bukti_pembayaran]))
                     ->visible(fn($record) => !empty($record->bukti_pembayaran)),
             ])
-            ->recordUrl(fn($record) => static::getUrl('view', ['record' => $record]))
             ->bulkActions([
                 Tables\Actions\DeleteBulkAction::make(),
             ]);
@@ -270,7 +273,6 @@ class InvoiceResource extends Resource
             'index' => Pages\ListInvoices::route('/'),
             'create' => Pages\CreateInvoice::route('/create'),
             'edit' => Pages\EditInvoice::route('/{record}/edit'),
-            'view' => Pages\ViewInvoice::route('/{record}'),
             'cetak-periode' => Pages\CetakInvoicePeriode::route('/cetak-periode'),
         ];
     }
@@ -279,8 +281,20 @@ class InvoiceResource extends Resource
     {
         $user = Auth::user();
 
-        return ($user && $user->role === 'customer')
-            ? parent::getEloquentQuery()->where('customer_id', $user->id)
-            : parent::getEloquentQuery();
+        // Customer hanya melihat invoice miliknya
+        if ($user && $user->role === 'customer') {
+            return parent::getEloquentQuery()->where('customer_id', $user->id);
+        }
+
+        // Sopir hanya melihat invoice yang terkait dengan pengiriman yang dia lakukan
+        if ($user && $user->role === 'operasional_sopir') {
+            return parent::getEloquentQuery()
+                ->whereHas('permintaan.jadwalPengiriman.detailJadwal.pasangan', function ($query) use ($user) {
+                    $query->where('sopir_id', $user->id);
+                });
+        }
+
+        // Akuntan dan lainnya melihat semua
+        return parent::getEloquentQuery();
     }
 }

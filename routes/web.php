@@ -49,7 +49,6 @@ Route::get('/admin/invoices/print-periode', function () {
     return $pdf->download('invoice-periode-' . now()->format('YmdHis') . '.pdf');
 });
 
-
 Route::get('/invoices/{invoice}/print', [InvoicePrintController::class, 'print'])->name('invoices.print');
 
 

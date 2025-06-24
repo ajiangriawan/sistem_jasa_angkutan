@@ -13,6 +13,7 @@ class Pengiriman extends Model
 
     protected $fillable = [
         'jadwal_id',
+        'detail_jadwal_id',
         'tonase',
         'tanggal',
         'catatan',

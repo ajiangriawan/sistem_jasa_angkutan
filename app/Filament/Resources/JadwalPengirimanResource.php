@@ -362,12 +362,12 @@ class JadwalPengirimanResource extends Resource
                                 'surat_jalan' => $data['surat_jalan'],
                                 'do_muat' => $data['do_muat'],
                             ]);
-
                             Pengiriman::create([
                                 'jadwal_id' => $record->id,
                                 'tonase' => $data['tonase'],
                                 'tanggal' => now()->toDateString(),
-                                'user_id' => auth()->id(), // ✅ Tambahkan ini
+                                'user_id' => auth()->id(),
+                                'detail_jadwal_id' => $detail->id, // <-- Perbaikan di sini
                             ]);
 
                             static::updateJadwalPengirimanStatus($record);

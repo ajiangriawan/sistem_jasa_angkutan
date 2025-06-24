@@ -100,15 +100,20 @@ class LaporanKendalaResource extends Resource
     {
         return $table
             ->query(function () {
+                $user = Auth::user();
+
                 $query = LaporanKendala::query()
-                    ->orderByRaw("
-        FIELD(status, 'dilaporkan', 'ditindaklanjuti', 'selesai')
-    ")
+                    ->orderByRaw("FIELD(status, 'dilaporkan', 'ditindaklanjuti', 'selesai')")
                     ->orderBy('created_at', 'desc');
 
+                // Jika role adalah sopir, filter hanya yang sesuai dengan dirinya
+                if ($user->role === 'operasional_sopir') {
+                    $query->where('sopir_id', $user->id);
+                }
 
                 return $query;
             })
+
             ->columns([
                 TextColumn::make('sopir.name')->label('Pelapor')->searchable(),
                 TextColumn::make('kategori')->label('Kategori'),

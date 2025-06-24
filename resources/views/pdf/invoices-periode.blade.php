@@ -3,8 +3,6 @@
 
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <title>Invoice Periode</title>
     <style>
         body {
@@ -19,13 +17,16 @@
 
         .kop img {
             width: 100%;
+        }
 
+        .row {
+            display: flex;
+            justify-content: space-between;
         }
 
         .info,
         .footer {
             margin: 10px 0;
-            font-size: 11px;
         }
 
         table {
@@ -45,34 +46,9 @@
             text-align: right;
         }
 
-        .terbilang {
-            margin-top: 10px;
-            font-style: italic;
-        }
-
-        .footer p {
-            margin: 0;
-        }
-
         .ttd {
             margin-top: 30px;
-            text-align: right;
-        }
-
-        .ttd img {
-            height: 100px;
-        }
-
-        .column {
-            float: left;
-            width: 50%;
-        }
-
-        /* Clear floats after the columns */
-        .row:after {
-            content: "";
-            display: table;
-            clear: both;
+            text-align: left;
         }
     </style>
 </head>
@@ -83,22 +59,19 @@
         <img src="{{ public_path('kop.png') }}" alt="Logo">
     </div>
 
-    <h3 style="text-align:center; margin: bottom 4px;">INVOICE</h3>
+    <h3 style="text-align:center;">INVOICE</h3>
 
     <div class="row">
-        <div class="column">
-            <p><Strong>Tanggal:</Strong>{{$tanggal_invoice}}</p>
+        <div>
+            <p><strong>Tanggal:</strong> {{ $tanggal_invoice }}</p>
             <p><strong>Periode:</strong> {{ \Carbon\Carbon::parse($start_date)->format('d-m-Y') }} s.d {{ \Carbon\Carbon::parse($end_date)->format('d-m-Y') }}</p>
         </div>
-        <div class="column"></div>
-        <div class="column">
-            <Strong>Kepada Yth:</Strong>
-            <p>{{ $customer }}<br>
-            <p>{{ $customer_alamat }}<br>
-            </p>
+        <div>
+            <p><strong>Kepada Yth:</strong></p>
+            <p>{{ $customer }}</p>
+            <p>{{ $customer_alamat }}</p>
         </div>
     </div>
-
 
     <table>
         <thead>
@@ -112,49 +85,79 @@
         </thead>
         <tbody>
             @php
-            $subtotal = 0;
+            $rows = [];
+            $grandQty = 0;
+            $grandTotal = 0;
             @endphp
-            @foreach ($invoices as $i => $inv)
-            @php
-            $qtysopir = $inv->permintaan->detailJadwalPengirimans->count();
-            $uangjalan = $inv->permintaan->rute->uang_jalan ?? 0;
 
+            @foreach ($invoices as $inv)
+            @php
+            $rute = $inv->permintaan->rute;
+            $harga = $rute->harga ?? 0;
             $pengirimans = $inv->permintaan
-            ->detailJadwalPengirimans
-            ->load('pengirimans') // pastikan relasi diload
-            ->flatMap(fn ($detail) => $detail->pengirimans);
+            ->jadwalPengiriman
+            ->flatMap(fn($jadwal) => $jadwal->detailJadwal)
+            ->flatMap(fn($detail) => $detail->pengiriman ? [$detail->pengiriman] : []);
 
             $qty = $pengirimans->sum('tonase');
-            $harga = $inv->permintaan->rute->harga?? 0;
             $total = $qty * $harga;
-            $subtotal += $total;
+
+            $rows[] = [
+            'nama_rute' => $rute->nama_rute ?? '-',
+            'qty' => $qty,
+            'harga' => $harga,
+            'total' => $total
+            ];
+
+            $grandQty += $qty;
+            $grandTotal += $total;
             @endphp
+            @endforeach
+
+            @foreach ($rows as $i => $row)
             <tr>
                 <td>{{ $i + 1 }}</td>
-                <td>{{ $inv->permintaan->rute->nama_rute ?? '-' }}</td>
-                <td>{{ $qty }}</td>
-                <td class="right-align">Rp{{ number_format($harga, 0, ',', '.') }}</td>
-                <td class="right-align">Rp{{ number_format($total, 0, ',', '.') }}</td>
+                <td>{{ $row['nama_rute'] }}</td>
+                <td>{{ number_format($row['qty'], 2, ',', '.') }}</td>
+                <td class="right-align">Rp {{ number_format($row['harga'], 0, ',', '.') }}</td>
+                <td class="right-align">Rp {{ number_format($row['total'], 2, ',', '.') }}</td>
             </tr>
             @endforeach
+
             <tr>
-                <td colspan="4"><strong>SUB TOTAL</strong></td>
-                <td class="right-align"><strong>Rp{{ number_format($subtotal, 0, ',', '.') }}</strong></td>
+                <td></td>
+                <td></td>
+                <td><strong>{{ number_format($grandQty, 2, ',', '.') }}</strong></td>
+                <td class="right-align"><strong>TAGIHAN</strong></td>
+                <td class="right-align"><strong>Rp {{ number_format($grandTotal, 0, ',', '.') }}</strong></td>
             </tr>
+
             @php
-            $pph = $subtotal * 0.005;
-            $totalTagihan = $subtotal - $pph;
+            $dpp = round($grandTotal / 1.09);
+            $ppn = round($dpp * 0.12);
+            $pph = round($dpp * 0.0225);
+            $nilaiBayar = $grandTotal + $ppn - $pph;
             @endphp
+
             <tr>
-                <td colspan="4">PPH Final 0.5%</td>
-                <td class="right-align">Rp{{ number_format($pph, 0, ',', '.') }}</td>
+                <td colspan="4" class="right-align">DPP LAIN</td>
+                <td class="right-align">Rp {{ number_format($dpp, 0, ',', '.') }}</td>
             </tr>
             <tr>
-                <td colspan="4"><strong>TOTAL TAGIHAN</strong></td>
-                <td class="right-align"><strong>Rp{{ number_format($totalTagihan, 0, ',', '.') }}</strong></td>
+                <td colspan="4" class="right-align">PPN 12%</td>
+                <td class="right-align">Rp {{ number_format($ppn, 0, ',', '.') }}</td>
+            </tr>
+            <tr>
+                <td colspan="4" class="right-align">PPH 23</td>
+                <td class="right-align">Rp {{ number_format($pph, 0, ',', '.') }}</td>
+            </tr>
+            <tr>
+                <td colspan="4" class="right-align"><strong>NILAI BAYAR</strong></td>
+                <td class="right-align"><strong>Rp {{ number_format($nilaiBayar, 0, ',', '.') }}</strong></td>
             </tr>
         </tbody>
     </table>
+
     <div class="footer">
         <p><strong>Pembayaran mohon ditransfer ke rekening:</strong></p>
         <p>Bank: <strong>MANDIRI</strong></p>
@@ -162,10 +165,19 @@
         <p>Atas Nama: <strong>PT. BALINK SAKTI SYNERGY</strong></p>
     </div>
 
+    <div>
+        <p>Demikian lah tagihan ini kami sampaikan. Atas perhatian dan kerjasamanya kami ucapkan terima kasih.
+        </p>
+    </div>
+
     <div class="ttd">
-        <p style="margin-bottom: 10px;">Hormat Kami,</p>
-        <!--<img src="{{ public_path('stempel-tanda-tangan.png') }}" alt="Stempel dan TTD">-->
-        <p>Andi Seman</p>
+        <p>Hormat Kami,</p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p>MEIGEN PRAJUDA</p>
+        <p>OPERASIONAL MANAGER PT BALINK SAKTY SYNERGY</p>
     </div>
 
 </body>

@@ -51,7 +51,6 @@ class Permintaan extends Model
         return $this->hasOne(Invoice::class);
     }
 
-
     // App\Models\Permintaan.php
     public function pengirimanTonase()
     {

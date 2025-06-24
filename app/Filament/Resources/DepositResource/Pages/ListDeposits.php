@@ -20,15 +20,5 @@ class ListDeposits extends ListRecords
         ];
     }
 
-    protected function getTableQuery(): Builder
-    {
-        $query = parent::getTableQuery();
-
-        // Customer hanya melihat deposit miliknya
-        if (Auth::user()->role === 'customer') {
-            return $query->where('user_id', Auth::id());
-        }
-
-        return $query; // Akuntan bisa lihat semua
-    }
+    
 }

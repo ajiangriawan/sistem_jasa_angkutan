@@ -120,10 +120,10 @@
             <div class="text-center text-gray-300">
                 <p class="mb-4">Untuk pertanyaan atau informasi lebih lanjut, silakan hubungi kami melalui:</p>
                 <p class="mb-2">
-                    <strong>Email:</strong> <a href="mailto:info@balinksakti.com" class="text-orange-400">info@balinksakti.com</a>
+                    <strong>Email:</strong> <a href="mailto:balinksaktisynergy.pt@gmail.com" class="text-orange-400">balinksaktisynergy.pt@gmail.com</a>
                 </p>
                 <p>
-                    <strong>WhatsApp:</strong> <a href="https://wa.me/+6287813233775" class="text-orange-400">+62878 1323 3775</a>
+                    <strong>WhatsApp:</strong> <a href="https://wa.me/+6282176300057" class="text-orange-400">+6282176300057</a>
                 </p>
             </div>
         </section>
@@ -133,7 +133,7 @@
         <div class="w-full max-w-screen-xl mx-auto p-4 md:py-8">
             <div class="sm:flex sm:items-center sm:justify-center">
                 <a href="/" class="flex items-center mb-4 sm:mb-0 space-x-3 rtl:space-x-reverse">
-                    <img src="{{ asset('images/logo.png') }}" class="h-8" alt="Bss Logo" />
+                    <img src="{{ asset('images/logo.png') }}" class="h-8 bg-white rounded-full" alt="Bss Logo" />
                     <span class="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">PT Balink Sakti Synergy</span>
                 </a>
             </div>
