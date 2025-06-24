@@ -8,6 +8,7 @@ use App\Models\JadwalPengiriman;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Support\Facades\Auth;
 
 class JadwalMingguIni extends BaseWidget
 {
@@ -52,10 +53,8 @@ class JadwalMingguIni extends BaseWidget
                 ->tooltip(fn($record) => $record->catatan),
         ];
     }
-/*
     public static function canView(): bool
     {
-        return auth()->user()?->role === 'operasional_pengiriman';
+        return Auth::check() && in_array(Auth::user()->role, ['admin_direksi', 'operasional_pengiriman']);
     }
-        */
 }

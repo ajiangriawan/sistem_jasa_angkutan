@@ -45,6 +45,7 @@ class LaporanPengirimanExport implements FromArray, WithHeadings
 
             $debit = $amount > 0 ? $amount : 0;
             $kredit = $amount < 0 ? abs($amount) : 0;
+            
             $info = $amount > 0 ? 'Deposit dari customer' : 'Pembayaran uang jalan / bonus';
 
             $rute = '-';
@@ -68,6 +69,7 @@ class LaporanPengirimanExport implements FromArray, WithHeadings
                 if ($permintaan) {
                     $rute = $permintaan->rute->nama_rute ?? '-';
                     $bonusPerTon = $permintaan->rute->bonus ?? 0;
+                    $uangJalan = $permintaan->rute->uang_jalan ?? 0;
 
                     $detail = optional($permintaan->jadwalPengiriman->first())->detailJadwal->first();
                     if ($detail && $detail->pasangan) {
@@ -92,13 +94,13 @@ class LaporanPengirimanExport implements FromArray, WithHeadings
                             $plat,
                             number_format($tonaseVal, 2, ',', '.'),
                             '',
-                            'Rp ' . number_format($kredit, 0, ',', '.'),
+                            'Rp ' . number_format($uangJalan, 0, ',', '.'),
                             'Rp ' . number_format($bonusVal, 0, ',', '.'),
                             'Rp ' . number_format($amount, 0, ',', '.'),
                         ];
 
                         $totalTonase += $tonaseVal;
-                        $totalKredit += $kredit;
+                        $totalKredit += $uangJalan;
                         $totalBonus += $bonusVal;
                         $totalJumlah += $amount;
                     }

@@ -7,6 +7,7 @@ use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
 use App\Models\PermintaanCekKendaraan;
 use Filament\Tables\Columns\TextColumn;
+use Illuminate\Support\Facades\Auth;
 
 class PermintaanCekKendaraanWidget extends BaseWidget
 {
@@ -27,5 +28,10 @@ class PermintaanCekKendaraanWidget extends BaseWidget
             TextColumn::make('status')->badge(),
             TextColumn::make('created_at')->dateTime('d M Y H:i'),
         ];
+    }
+    public static function canView(): bool
+    {
+        return Auth::check() && in_array(Auth::user()->role, ['admin_direksi', 'operasional_transportasi']);
+    
     }
 }

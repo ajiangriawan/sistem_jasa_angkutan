@@ -8,6 +8,8 @@ use App\Models\Permintaan;
 use Carbon\Carbon;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
+use Illuminate\Support\Facades\Auth;
+
 
 class KeuanganOverview extends BaseWidget
 {
@@ -49,7 +51,7 @@ class KeuanganOverview extends BaseWidget
 
             Stat::make('Deposit Masuk (Diterima)', 'Rp ' . number_format($depositMasuk, 0, ',', '.'))
                 ->description('Bulan Ini'),
-/*
+            /*
             Stat::make('Deposit Menunggu Konfirmasi', $depositMenunggu . ' transaksi')
                 ->description('Belum Dikonfirmasi'),
 
@@ -63,5 +65,9 @@ class KeuanganOverview extends BaseWidget
                 ->description('Status ditolak'),
                  */
         ];
+    }
+    public static function canView(): bool
+    {
+        return Auth::check() && in_array(Auth::user()->role, ['admin_direksi', 'akuntan']);
     }
 }

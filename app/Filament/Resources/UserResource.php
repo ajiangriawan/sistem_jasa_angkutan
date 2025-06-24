@@ -119,6 +119,7 @@ class UserResource extends Resource
 
                 Tables\Columns\BadgeColumn::make('role')
                     ->label('Role')
+                    ->sortable()
                     ->color(fn(string $state): string => match ($state) {
                         'admin_direksi', 'admin_hr' => 'danger',
                         'operasional_pengiriman',

@@ -4,6 +4,7 @@ namespace App\Filament\Widgets;
 
 use Filament\Widgets\ChartWidget;
 use App\Models\JadwalPengiriman;
+use Illuminate\Support\Facades\Auth;
 
 class PengirimanChart extends ChartWidget
 {
@@ -42,5 +43,10 @@ class PengirimanChart extends ChartWidget
                 ],
             ],
         ];
+    }
+    public static function canView(): bool
+    {
+        return Auth::check() && in_array(Auth::user()->role, ['admin_direksi', 'operasional_pengiriman']);
+    
     }
 }

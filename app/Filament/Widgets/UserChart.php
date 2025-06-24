@@ -4,6 +4,7 @@ namespace App\Filament\Widgets;
 
 use Filament\Widgets\ChartWidget;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 
 class UserChart extends ChartWidget
 {
@@ -48,5 +49,10 @@ class UserChart extends ChartWidget
     protected function getType(): string
     {
         return 'pie'; // atau 'doughnut' jika ingin tampilan tengah kosong
+    }
+    public static function canView(): bool
+    {
+        return Auth::check() && in_array(Auth::user()->role, ['admin_hr', 'admin_direksi', 'operasional_transportasi']);
+    
     }
 }

@@ -6,6 +6,8 @@ use App\Models\Kendaraan;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Widgets\TableWidget as BaseWidget;
 use Filament\Tables\Columns\TextColumn;
+use Illuminate\Support\Facades\Auth;
+
 
 class KendaraanSeringRusakWidget extends BaseWidget
 {
@@ -35,6 +37,7 @@ class KendaraanSeringRusakWidget extends BaseWidget
 
     public static function canView(): bool
     {
-        return auth()->user()?->role === 'operasional_transportasi';
+        return Auth::check() && in_array(Auth::user()->role, ['admin_direksi', 'operasional_transportasi']);
+    
     }
 }

@@ -303,6 +303,9 @@ class JadwalPengirimanResource extends Resource
                                 $kendaraan->update(['status' => 'beroperasi']);
                             }
 
+                            // Update status user menjadi "bertugas"
+                            $currentUser->update(['status' => 'bertugas']);
+
                             // Update status jadwal utama (berdasarkan detail jadwal)
                             static::updateJadwalPengirimanStatus($record);
 
@@ -311,7 +314,7 @@ class JadwalPengirimanResource extends Resource
 
                             Notification::make()
                                 ->title('Status Diubah')
-                                ->body('Status diubah menjadi pengambilan. Kendaraan ditandai beroperasi.')
+                                ->body('Status diubah menjadi pengambilan. Kendaraan ditandai beroperasi. Sopir ditandai bertugas.')
                                 ->success()
                                 ->send();
                         } else {

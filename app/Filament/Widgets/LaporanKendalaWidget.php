@@ -8,6 +8,7 @@ use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 
+
 class LaporanKendalaWidget extends BaseWidget
 {
     protected int|string|array $columnSpan = 'full';
@@ -28,7 +29,7 @@ class LaporanKendalaWidget extends BaseWidget
             TextColumn::make('kategori')
                 ->label('Kategori')
                 ->badge()
-                ->color(fn ($state) => match ($state) {
+                ->color(fn($state) => match ($state) {
                     'kerusakan_kendaraan' => 'danger',
                     'umum' => 'warning',
                     default => 'gray',
@@ -37,7 +38,7 @@ class LaporanKendalaWidget extends BaseWidget
             TextColumn::make('deskripsi')
                 ->label('Deskripsi')
                 ->limit(40)
-                ->tooltip(fn ($record) => $record->deskripsi),
+                ->tooltip(fn($record) => $record->deskripsi),
 
             TextColumn::make('alamat')
                 ->label('Lokasi')
@@ -45,7 +46,7 @@ class LaporanKendalaWidget extends BaseWidget
 
             TextColumn::make('status')
                 ->badge()
-                ->color(fn ($state) => match ($state) {
+                ->color(fn($state) => match ($state) {
                     'dilaporkan' => 'warning',
                     'ditindaklanjuti' => 'info',
                     'selesai' => 'success',
@@ -57,10 +58,8 @@ class LaporanKendalaWidget extends BaseWidget
                 ->dateTime('d M Y H:i'),
         ];
     }
-/*
     public static function canView(): bool
     {
-        return Auth::user()?->role === 'operasional_transportasi';
+        return Auth::check() && in_array(Auth::user()->role, ['admin_direksi', 'operasional_pengiriman', 'operasional_transportasi']);
     }
-        */
 }

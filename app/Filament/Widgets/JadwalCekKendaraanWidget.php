@@ -8,6 +8,7 @@ use Filament\Widgets\TableWidget as BaseWidget;
 use App\Models\JadwalCekKendaraan;
 use Illuminate\Support\Carbon;
 use Filament\Tables\Columns\TextColumn;
+use Illuminate\Support\Facades\Auth;
 
 class JadwalCekKendaraanWidget extends BaseWidget
 {
@@ -30,5 +31,9 @@ class JadwalCekKendaraanWidget extends BaseWidget
             TextColumn::make('teknisi.name')->label('Teknisi'),
             TextColumn::make('status')->badge(),
         ];
+    }
+    public static function canView(): bool
+    {
+        return Auth::check() && in_array(Auth::user()->role, ['admin_direksi', 'operasional_pengiriman', 'operasioan_teknisi']);
     }
 }

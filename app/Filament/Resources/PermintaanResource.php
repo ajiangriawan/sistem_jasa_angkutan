@@ -174,8 +174,10 @@ class PermintaanResource extends Resource
                     $query->where('customer_id', $user->id);
                 }
 
+
                 if ($user->role === 'akuntan') {
-                    $query->whereDoesntHave('invoice'); // ✅ hanya tampilkan yang belum punya invoice
+                    $query->where('status_verifikasi', 'selesai') // ✅ hanya status selesai
+                        ->whereDoesntHave('invoice'); // ✅ belum punya invoice
                 }
 
                 return $query;

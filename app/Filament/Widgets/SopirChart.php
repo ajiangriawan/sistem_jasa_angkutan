@@ -6,6 +6,7 @@ use Filament\Widgets\ChartWidget;
 use App\Models\User;
 use App\Models\DetailJadwalPengiriman;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class SopirChart extends ChartWidget
 {
@@ -47,5 +48,10 @@ class SopirChart extends ChartWidget
     protected function getType(): string
     {
         return 'bar'; // bisa diganti dengan 'line' atau 'pie' sesuai kebutuhan
+    }
+    public static function canView(): bool
+    {
+        return Auth::check() && in_array(Auth::user()->role, ['admin_hr', 'admin_direksi', 'operasional_transportasi']);
+    
     }
 }

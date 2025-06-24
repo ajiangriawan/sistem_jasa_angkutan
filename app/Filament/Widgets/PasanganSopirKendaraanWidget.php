@@ -5,6 +5,8 @@ namespace App\Filament\Widgets;
 use Filament\Widgets\TableWidget as BaseWidget;
 use App\Models\PasanganSopirKendaraan;
 use Filament\Tables\Columns\TextColumn;
+use Illuminate\Support\Facades\Auth;
+
 
 class PasanganSopirKendaraanWidget extends BaseWidget
 {
@@ -21,10 +23,9 @@ class PasanganSopirKendaraanWidget extends BaseWidget
             TextColumn::make('kendaraan.status')->label('Status')->badge(),
         ];
     }
-    /*
     public static function canView(): bool
     {
-        return auth()->user()?->role === 'operasional_transportasi';
+        return Auth::check() && in_array(Auth::user()->role, ['admin_direksi', 'operasional_transportasi']);
+    
     }
-        */
 }

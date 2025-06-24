@@ -5,6 +5,8 @@ namespace App\Filament\Widgets;
 use App\Models\Invoice;
 use Carbon\Carbon;
 use Filament\Widgets\LineChartWidget;
+use Illuminate\Support\Facades\Auth;
+
 
 class KeuanganChart extends LineChartWidget
 {
@@ -60,5 +62,10 @@ class KeuanganChart extends LineChartWidget
                 */
             ],
         ];
+    }
+    public static function canView(): bool
+    {
+        return Auth::check() && in_array(Auth::user()->role, ['admin_direksi', 'akuntan']);
+    
     }
 }

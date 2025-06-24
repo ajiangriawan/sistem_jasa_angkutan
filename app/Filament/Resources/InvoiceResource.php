@@ -190,27 +190,9 @@ class InvoiceResource extends Resource
                 ->label('Total yang Harus Dibayarkan')
                 ->readOnly()
                 ->prefix('Rp')
-                ->formatStateUsing(fn($state) => number_format((int) $state, 0, ',', '.'))
-                ->default(function () {
-                    $permintaan = \App\Models\Permintaan::with(['rute', 'jadwalPengiriman.detailJadwal.pengiriman'])->find(request()->get('permintaan_id'));
-                    if (!$permintaan) return 0;
-
-                    $uangJalan = $permintaan->rute->uang_jalan ?? 0;
-                    $bonusPerTon = $permintaan->rute->bonus ?? 0;
-
-                    $totalUangJalan = 0;
-
-                    foreach ($permintaan->jadwalPengiriman as $jadwal) {
-                        foreach ($jadwal->detailJadwal as $detail) {
-                            $tonase = $detail->pengiriman->tonase ?? 0;
-                            $bonus = max(0, $tonase - 30) * $bonusPerTon;
-                            $totalUangJalan += $uangJalan + $bonus;
-                        }
-                    }
-
-                    return $totalUangJalan;
-                }),
-
+                ->formatStateUsing(fn($state) => number_format((float) $state, 0, ',', '.'))
+                ->dehydrateStateUsing(fn($state) => (float) str_replace(['.', ','], '', $state)),
+                
             Forms\Components\FileUpload::make('bukti_pembayaran')
                 ->label('Bukti Pembayaran')
                 ->directory('bukti-invoice')

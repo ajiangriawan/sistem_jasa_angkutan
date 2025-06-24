@@ -32,6 +32,21 @@ class KontrakKerjaResource extends Resource
         return Auth::check() && in_array(Auth::user()->role, ['operasional_pengiriman', 'admin_hr']);
     }
 
+    public static function canCreate(): bool
+    {
+        return Auth::check() && in_array(Auth::user()->role, ['admin_hr']);
+    }
+
+    public static function canEdit($record): bool
+    {
+        return Auth::check() && in_array(Auth::user()->role, ['admin_hr']);
+    }
+
+    public static function canDelete($record): bool
+    {
+        return Auth::check() && in_array(Auth::user()->role, ['admin_hr']);
+    }
+
     public static function shouldRegisterNavigation(): bool
     {
         return self::canViewAny();

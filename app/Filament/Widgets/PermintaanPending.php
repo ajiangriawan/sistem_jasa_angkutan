@@ -37,10 +37,9 @@ class PermintaanPending extends BaseWidget
                 ->description('Sudah selesai'),
         ];
     }
-    /*
     public static function canView(): bool
     {
-        return Auth::user()?->role === 'operasional_pengiriman';
+        return Auth::check() && in_array(Auth::user()->role, ['admin_direksi', 'operasional_pengiriman']);
+    
     }
-        */
 }

@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Support\Carbon;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
+use Illuminate\Support\Facades\Auth;
 
 class UserOverview extends StatsOverviewWidget
 {
@@ -17,6 +18,8 @@ class UserOverview extends StatsOverviewWidget
         $inactiveUsers = User::where('status', 'tidak aktif')->count();
 
         $activeDrivers = User::where('role', 'operasional_sopir')->where('status', 'aktif')->count();
+        $jadwalDrivers = User::where('role', 'operasional_sopir')->where('status', 'dijadwalkan')->count();
+        $tugasDrivers = User::where('role', 'operasional_sopir')->where('status', 'bertugas')->count();
 
         $scheduledDrivers = User::where('role', 'operasional_sopir')
             ->whereHas('jadwalPengiriman', function ($q) {
@@ -34,8 +37,13 @@ class UserOverview extends StatsOverviewWidget
             Stat::make('Pengguna Aktif / Total', $activeUsers . '/'. $users),
             //Stat::make('Pengguna Tidak Aktif', $inactiveUsers),
             Stat::make('Sopir Aktif', $activeDrivers),
-            Stat::make('Sopir Dijadwalkan', $scheduledDrivers),
-            Stat::make('Sopir Bertugas Hari Ini', $onDutyDrivers),
+            Stat::make('Sopir Dijadwalkan', $jadwalDrivers),
+            Stat::make('Sopir Bertugas', $tugasDrivers),
         ];
+    }
+    public static function canView(): bool
+    {
+        return Auth::check() && in_array(Auth::user()->role, ['admin_hr', 'admin_direksi', 'operasional_transportasi']);
+    
     }
 }

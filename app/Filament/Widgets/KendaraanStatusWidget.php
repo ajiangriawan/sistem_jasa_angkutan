@@ -5,6 +5,8 @@ namespace App\Filament\Widgets;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use App\Models\Kendaraan;
+use Illuminate\Support\Facades\Auth;
+
 
 class KendaraanStatusWidget extends BaseWidget
 {
@@ -24,10 +26,9 @@ class KendaraanStatusWidget extends BaseWidget
         ];
     }
 
-    /*
     public static function canView(): bool
     {
-        return auth()->user()?->role === 'operasional_transportasi';
+        return Auth::check() && in_array(Auth::user()->role, ['admin_direksi', 'operasional_transportasi']);
+    
     }
-    */
 }
